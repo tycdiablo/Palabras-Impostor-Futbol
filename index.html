@@ -45,6 +45,11 @@ transition: background 0.5s;
 /* NUEVO: Estilo para la alarma del impostor */
 body.impostor-alarm {
 background: #800 !important; /* Rojo oscuro */
+animation: background-flash 0.5s infinite alternate;
+}
+@keyframes background-flash {
+    from { background-color: #800; }
+    to { background-color: #c00; }
 }
 
 .container {
@@ -159,7 +164,6 @@ font-family: var(--font-secondary);
 font-size: 1.2rem;
 font-weight: 700;
 color: var(--color-text-dark);
-/* width: 150px; / / Ajustado para checkboxes */
 }
 
 .option-value {
@@ -189,7 +193,6 @@ display: flex;
 flex-direction: column;
 gap: 10px;
 margin-top: 10px;
-/* Se oculta por defecto */
 }
 
 .player-name-input {
@@ -283,10 +286,10 @@ animation: zoomIn 0.3s ease-out;
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes zoomIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
 
-.hidden { display: none; }
+.hidden { display: none !important; }
 
 .impostor-text {
-color: var(--color-accent);
+color: #c9302c; /* Rojo de impostor */
 animation: pulse 1.5s infinite;
 }
 
@@ -443,8 +446,8 @@ margin-top: 10px;
 </div>
 
 <!-- NUEVO: Audio de alarma (debe estar fuera del container) -->
-<!-- CAMBIA EL SRC por tu enlace de audio -->
-<audio id="alarm-sound" src="placeholder_alarm.mp3" loop preload="auto"></audio>
+<!-- CAMBIA EL SRC por tu enlace de audio. Usando un placeholder para que no falle -->
+<audio id="alarm-sound" src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAAABkYXRhAAAAAA==" loop preload="auto"></audio>
 
 
 <script>
@@ -606,7 +609,8 @@ let selectedCategory = "players";
 // NUEVAS variables de estado
 let enableSpecialRounds = false;
 let impostorKnows = true;
-let currentRoundType = "normal"; // "normal", "todosImpostores", "nadieImpostor", "todosMenosUno", "todosDistintos"
+// Modificamos a null para que "normal" se establezca en setupGame
+let currentRoundType = null; 
 
 // --- REFERENCIAS DEL DOM ---
 const startScreen = document.getElementById('start-screen');
@@ -636,6 +640,7 @@ const revealArea = document.getElementById('reveal-area');
 const impostorListEl = document.getElementById('impostor-list');
 const endMessageInitialEl = document.getElementById('end-message-initial');
 const specialRoundInfoEl = document.getElementById('special-round-info'); // NUEVO
+const endMessageFinalEl = document.getElementById('end-message-final'); // Referencia para el mensaje final
 
 const messageModal = document.getElementById('message-modal');
 const modalText = document.getElementById('modal-text');
@@ -648,65 +653,89 @@ const alarmSound = document.getElementById('alarm-sound');
 
 // --- FUNCIONES DE INTERFAZ ---
 function showMessage(message) {
-modalText.textContent = message;
-messageModal.style.display = 'flex';
+    modalText.textContent = message;
+    messageModal.style.display = 'flex';
 }
 modalCloseBtn.addEventListener('click', () => {
-messageModal.style.display = 'none';
+    messageModal.style.display = 'none';
 });
 
 function showScreen(screen) {
-document.querySelectorAll('.screen').forEach(s => {
-s.classList.remove('active');
-});
-screen.classList.add('active');
+    document.querySelectorAll('.screen').forEach(s => {
+        s.classList.remove('active');
+    });
+    screen.classList.add('active');
 }
 
 // NUEVO: Detener alarma (función de ayuda)
 function stopAlarm() {
     document.body.classList.remove('impostor-alarm');
     alarmSound.pause();
-    if (alarmSound.currentTime) {
+    // Intenta reiniciar el audio, pero maneja errores si el navegador lo bloquea
+    try {
         alarmSound.currentTime = 0;
+    } catch (e) {
+        console.warn("No se pudo reiniciar el audio, es normal en algunos navegadores.", e);
+    }
+}
+// NUEVO: Iniciar Alarma
+function startAlarm() {
+    if (!enableSpecialRounds) return; // Solo suena si las rondas especiales están activas
+    document.body.classList.add('impostor-alarm');
+    // Intenta reproducir el audio
+    const playPromise = alarmSound.play();
+    if (playPromise !== undefined) {
+        playPromise.catch(error => {
+            // Error de autplay (normal en navegadores)
+            console.warn("El audio de alarma requiere interacción del usuario para reproducirse.");
+        });
     }
 }
 
+
 // --- LÓGICA DE CONFIGURACIÓN ---
 function renderPlayerNameInputs() {
-playerNamesContainer.innerHTML = '';
-// Asegura que playerNames tenga el tamaño correcto
-while (playerNames.length < playerCount) {
-playerNames.push(Jugador ${playerNames.length + 1}));
-}
-playerNames = playerNames.slice(0, playerCount);
+    playerNamesContainer.innerHTML = '';
+    // Asegura que playerNames tenga el tamaño correcto
+    while (playerNames.length < playerCount) {
+        // Usa el nombre por defecto si no existe
+        playerNames.push(`Jugador ${playerNames.length + 1}`);
+    }
+    playerNames = playerNames.slice(0, playerCount);
 
-for (let i = 0; i < playerCount; i++) {
-const input = document.createElement('input');
-input.type = 'text';
-input.classList.add('player-name-input');
-input.placeholder = Jugador ${i + 1};
-input.value = playerNames[i];
-input.dataset.index = i;
-input.addEventListener('input', (e) => {
-// Guarda el nombre en el array al escribir
-playerNames[i] = e.target.value.trim() || Jugador ${i + 1};
-});
-playerNamesContainer.appendChild(input);
-}
-playerCountEl.textContent = playerCount;
-updateImpostorLimits();
+    for (let i = 0; i < playerCount; i++) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.classList.add('player-name-input');
+        input.placeholder = `Jugador ${i + 1}`;
+        input.value = playerNames[i];
+        input.dataset.index = i;
+        input.addEventListener('input', (e) => {
+            // Guarda el nombre en el array al escribir
+            playerNames[i] = e.target.value.trim() || `Jugador ${i + 1}`;
+        });
+        playerNamesContainer.appendChild(input);
+    }
+    playerCountEl.textContent = playerCount;
+    updateImpostorLimits();
 }
 
 function updateImpostorLimits() {
-// No hay límite máximo de impostores, solo deben ser menos que los jugadores
-if (impostorCount >= playerCount) {
-impostorCount = playerCount - 1;
-}
-// Mínimo 1 impostor si hay jugadores (mínimo 3 jugadores)
-if (playerCount > 1 && impostorCount < 1) {
-impostorCount = 1;
-}
-impostorCountEl.textContent = impostorCount;
+    // No hay límite máximo de impostores, solo deben ser menos que los jugadores
+    if (impostorCount >= playerCount) {
+        impostorCount = playerCount - 1;
+    }
+    // Mínimo 1 impostor si hay jugadores (mínimo 3 jugadores)
+    if (playerCount > 1 && impostorCount < 1) {
+        impostorCount = 1;
+    }
+    
+    // Si solo hay 2 jugadores o menos, el juego no funciona
+    if (playerCount < 3) {
+        impostorCount = 1; // Aunque no se debería iniciar la partida, mantenemos el mínimo
+    }
+    
+    impostorCountEl.textContent = impostorCount;
 }
 
 // --- LÓGICA DE ASIGNACIÓN DEL JUEGO (MUY MODIFICADA) ---
@@ -715,29 +744,37 @@ function setupGame() {
     impostorIndices = [];
     wordForPlayers = "";
     wordForImpostor = "";
-    currentRoundType = "normal"; // Resetea el tipo de ronda
+    currentRoundType = "normal"; // Resetea el tipo de ronda a normal por defecto
     stopAlarm(); // Asegura que la alarma esté apagada al inicio
     
     // 1. Elegir la lista de palabras
     let wordList;
     if (selectedCategory === 'random') {
-        const allLists = Object.values(allWordLists);
+        const allLists = Object.values(allWordLists).filter(list => list.length > 0);
         wordList = allLists[Math.floor(Math.random() * allLists.length)];
     } else {
         wordList = allWordLists[selectedCategory];
+    }
+    
+    // Asegurarse de que hay palabras
+    if (!wordList || wordList.length === 0) {
+        showMessage("La categoría seleccionada no tiene palabras. Por favor, elige otra.");
+        showScreen(configScreen);
+        return;
     }
 
     // 2. Verificar Rondas Especiales
     // (Probabilidad del 25% si está habilitado)
     if (enableSpecialRounds && Math.random() < 0.25) {
-        const specialType = Math.floor(Math.random() * 4);
+        // 5 casos posibles: 0, 1, 2, 3, 4
+        const specialType = Math.floor(Math.random() * 5); 
         
         switch (specialType) {
             case 0: // Todos impostores
                 currentRoundType = "Todos Impostores";
                 impostorIndices = Array.from({length: playerCount}, (_, i) => i);
                 wordForImpostor = "IMPOSTOR";
-                wordForPlayers = "IMPOSTOR"; // Técnicamente no se usa
+                wordForPlayers = "IMPOSTOR"; 
                 break;
             case 1: // Nadie es impostor
                 currentRoundType = "Nadie es Impostor";
@@ -747,15 +784,17 @@ function setupGame() {
             case 2: // Todos menos uno impostor
                 currentRoundType = "Todos menos uno Impostor";
                 const luckyPlayer = Math.floor(Math.random() * playerCount);
+                // El impostorIndices son todos menos el luckyPlayer
                 impostorIndices = Array.from({length: playerCount}, (_, i) => i).filter(i => i !== luckyPlayer);
                 wordForPlayers = wordList[Math.floor(Math.random() * wordList.length)];
                 wordForImpostor = "IMPOSTOR";
                 break;
-            case 4: // Todos con palabra distinta
-            default: // Caso de respaldo
+            case 3: // Todos con palabra distinta (usamos 3 para mantener el orden 0, 1, 2, 3)
+            case 4: // Usamos 4 como alias, aunque 3 ya cubre el caso
+            default: 
                 currentRoundType = "Todos con palabra distinta";
-                impostorIndices = []; // No hay impostores, solo caos
-                // La palabra se asignará en la pantalla de "mostrar palabra"
+                impostorIndices = []; 
+                // La palabra se asignará de forma individual en la pantalla de "mostrar palabra"
                 break;
         }
     } else {
@@ -789,77 +828,84 @@ function setupGame() {
 
 
 function updateWordScreenUI() {
-// Muestra SOLO el nombre del jugador actual
-playerNameDisplayEl.textContent = playerNames[currentPlayerIndex];
-// Restablece la pantalla para mostrar la palabra
-wordDisplayEl.textContent = "";
-wordDisplayEl.classList.add('hidden');
-showWordBtn.classList.remove('hidden');
-// Lógica para el último jugador
-if (currentPlayerIndex === playerCount - 1) {
-nextPlayerBtn.textContent = "Finalizar Ronda";
-} else {
-nextPlayerBtn.textContent = "Siguiente Jugador";
-}
+    // Muestra SOLO el nombre del jugador actual
+    playerNameDisplayEl.textContent = `Es el turno de... ${playerNames[currentPlayerIndex]}`;
+    // Restablece la pantalla para mostrar la palabra
+    wordDisplayEl.textContent = "";
+    wordDisplayEl.classList.add('hidden');
+    wordDisplayEl.classList.remove('impostor-text'); // Limpia el color rojo
+    showWordBtn.classList.remove('hidden');
+    // Lógica para el último jugador
+    if (currentPlayerIndex === playerCount - 1) {
+        nextPlayerBtn.textContent = "Finalizar Ronda";
+    } else {
+        nextPlayerBtn.textContent = "Siguiente Jugador";
+    }
+    stopAlarm();
 }
 // --- EVENT LISTENERS ---
 
 // Pantalla de inicio
 startGameBtn.addEventListener('click', () => {
-showScreen(configScreen);
-renderPlayerNameInputs();
+    showScreen(configScreen);
+    renderPlayerNameInputs();
 });
 // Botón para mostrar/ocultar los campos de nombres
 toggleNamesBtn.addEventListener('click', () => {
-playerNamesContainer.classList.toggle('hidden');
-const isHidden = playerNamesContainer.classList.contains('hidden');
-toggleNamesBtn.textContent = isHidden ? "Cambiar nombres de jugadores" : "Ocultar nombres";
+    playerNamesContainer.classList.toggle('hidden');
+    const isHidden = playerNamesContainer.classList.contains('hidden');
+    toggleNamesBtn.textContent = isHidden ? "Cambiar nombres de jugadores" : "Ocultar nombres";
 });
 
 // Controles de Jugadores
 playersMinusBtn.addEventListener('click', () => {
-if (playerCount > 3) {
-playerCount--;
-renderPlayerNameInputs();
-} else {
-showMessage("La cantidad mínima de jugadores es 3.");
-}
+    if (playerCount > 3) {
+        playerCount--;
+        renderPlayerNameInputs();
+    } else {
+        showMessage("La cantidad mínima de jugadores es 3.");
+    }
 });
 playersPlusBtn.addEventListener('click', () => {
-if (playerCount < 34) { // Límite más alto para más flexibilidad
-playerCount++;
-renderPlayerNameInputs();
-} else {
-showMessage("Límite de 34 jugadores alcanzado.");
-}
+    if (playerCount < 34) { // Límite más alto para más flexibilidad
+        playerCount++;
+        renderPlayerNameInputs();
+    } else {
+        showMessage("Límite de 34 jugadores alcanzado.");
+    }
 });
 // Controles de Impostores
 impostorsMinusBtn.addEventListener('click', () => {
-if (impostorCount > 1) {
-impostorCount--;
-impostorCountEl.textContent = impostorCount;
-} else {
-showMessage("La cantidad mínima de impostores es 1.");
-}
-updateImpostorLimits();
+    if (impostorCount > 1) {
+        impostorCount--;
+        impostorCountEl.textContent = impostorCount;
+    } else {
+        showMessage("La cantidad mínima de impostores es 1.");
+    }
+    updateImpostorLimits();
 });
 impostorsPlusBtn.addEventListener('click', () => {
-if (impostorCount < playerCount - 1) {
-impostorCount++;
-impostorCountEl.textContent = impostorCount;
-} else {
-showMessage(No puede haber ${playerCount} o más impostores si solo hay ${playerCount} jugadores.);
-}
-updateImpostorLimits();
+    if (impostorCount < playerCount - 1) {
+        impostorCount++;
+        impostorCountEl.textContent = impostorCount;
+    } else {
+        showMessage(`No puede haber ${playerCount} o más impostores si solo hay ${playerCount} jugadores.`);
+    }
+    updateImpostorLimits();
 });
 // Selector de Categoría
 categorySelector.addEventListener('change', (e) => {
-selectedCategory = e.target.value;
+    selectedCategory = e.target.value;
 });
 
 // NUEVO: Listeners para los checkboxes
 specialRoundsCheck.addEventListener('change', (e) => {
     enableSpecialRounds = e.target.checked;
+    // Si desactivas las rondas especiales, el impostor por defecto sabe
+    if (!enableSpecialRounds) {
+        impostorKnowsCheck.checked = true;
+        impostorKnows = true;
+    }
 });
 
 impostorKnowsCheck.addEventListener('change', (e) => {
@@ -869,26 +915,28 @@ impostorKnowsCheck.addEventListener('change', (e) => {
 
 // Botón Iniciar Partida (Configuración)
 startRoundBtn.addEventListener('click', () => {
-// Validaciones
-if (impostorCount > 0 && (currentRoundType === "normal" || currentRoundType === "todosMenosUno")) {
-    if (playerCount <= impostorCount) {
-        showMessage("La cantidad de jugadores debe ser mayor que la de impostores.");
+    // Validaciones
+    if (playerCount < 3) {
+        showMessage("Debe haber al menos 3 jugadores.");
         return;
     }
-}
-if (playerCount < 3) {
-    showMessage("Debe haber al menos 3 jugadores.");
-    return;
-}
+    if (impostorCount > 0 && impostorCount >= playerCount && currentRoundType === "normal") {
+        showMessage("La cantidad de jugadores debe ser mayor que la de impostores para una ronda normal.");
+        return;
+    }
+    
+    // Recoger los nombres por última vez
+    document.querySelectorAll('.player-name-input').forEach((input, index) => {
+        // Sanitiza el nombre, usa el valor por defecto si está vacío
+        playerNames[index] = input.value.trim() || `Jugador ${index + 1}`;
+    });
 
-// Recoger los nombres por última vez
-document.querySelectorAll('.player-name-input').forEach((input, index) => {
-playerNames[index] = input.value.trim() || Jugador ${index + 1};
-});
+    setupGame();
+    // Vuelve a comprobar si setupGame falló (ej: si la lista de palabras está vacía)
+    if (currentRoundType === null) return; 
 
-setupGame();
-updateWordScreenUI();
-showScreen(wordScreen);
+    updateWordScreenUI();
+    showScreen(wordScreen);
 });
 
 // Botón Mostrar Palabra (LÓGICA MUY MODIFICADA)
@@ -898,30 +946,39 @@ showWordBtn.addEventListener('click', () => {
     // Resetea estilos y alarma
     wordDisplayEl.classList.remove('impostor-text');
     stopAlarm();
+    
+    let wordToShow = "";
 
-    // Caso 1: Ronda "Todos con palabra distinta"
+    // Lógica principal de asignación de palabra
     if (currentRoundType === "Todos con palabra distinta") {
-        let wordList; // Obtener la lista de palabras de nuevo
+        // Caso 1: Ronda "Todos con palabra distinta"
+        let wordList; 
         if (selectedCategory === 'random') {
-            const allLists = Object.values(allWordLists);
+            const allLists = Object.values(allWordLists).filter(list => list.length > 0);
             wordList = allLists[Math.floor(Math.random() * allLists.length)];
         } else {
             wordList = allWordLists[selectedCategory];
         }
-        wordDisplayEl.textContent = wordList[Math.floor(Math.random() * wordList.length)];
+        wordToShow = wordList[Math.floor(Math.random() * wordList.length)];
     
-    // Caso 2: El jugador es Impostor
+    } else if (currentRoundType === "Nadie es Impostor") {
+        // Caso 2: Nadie es Impostor
+        wordToShow = wordForPlayers;
+    
     } else if (isImpostor) {
-        wordDisplayEl.textContent = wordForImpostor; // "IMPOSTOR" o palabra distinta
+        // Caso 3: El jugador es Impostor (en cualquier otro tipo de ronda)
+        wordToShow = wordForImpostor; // "IMPOSTOR" o palabra distinta si no sabe
         wordDisplayEl.classList.add('impostor-text');
         
-        // ¡Activar alarma si las rondas especiales están habilitadas!
+        // ¡Activación de Alarma! (CORRECCIÓN: faltaba la llamada)
+        startAlarm();
         
-    // Caso 3: El jugador NO es Impostor (y no es ronda de "todos distintos")
     } else {
-        wordDisplayEl.textContent = wordForPlayers;
+        // Caso 4: El jugador NO es Impostor (Ronda Normal o Todos Menos Uno)
+        wordToShow = wordForPlayers;
     }
 
+    wordDisplayEl.textContent = wordToShow;
     wordDisplayEl.classList.remove('hidden');
     showWordBtn.classList.add('hidden');
 });
@@ -957,11 +1014,18 @@ impostorRevealBtn.addEventListener('click', () => {
 
     // NUEVO: Mostrar info de ronda especial
     if (currentRoundType !== "normal") {
-        let specialText = ¡Ronda Especial: ${currentRoundType}!;
+        let specialText = `¡Ronda Especial: ${currentRoundType}!`;
         if (currentRoundType === "Nadie es Impostor") {
-            specialText += " Todos tenían la palabra.";
+            specialText += ` Todos tenían la palabra clave: ${wordForPlayers}.`;
         } else if (currentRoundType === "Todos con palabra distinta") {
-            specialText += " Cada uno vio algo diferente.";
+            specialText += " Cada uno vio algo completamente diferente. ¡Caos!";
+        } else if (currentRoundType === "Todos Impostores") {
+            specialText += ` Todos eran impostores y vieron: ${wordForImpostor}.`;
+        } else if (currentRoundType === "Todos menos uno Impostor") {
+            // Encuentra el jugador que NO era impostor
+            const notImpostorIndex = Array.from({length: playerCount}, (_, i) => i).find(i => !impostorIndices.includes(i));
+            const notImpostorName = playerNames[notImpostorIndex];
+            specialText += ` Solo ${notImpostorName} tenía la palabra clave: ${wordForPlayers}.`;
         }
         specialRoundInfoEl.textContent = specialText;
         specialRoundInfoEl.classList.remove('hidden');
@@ -970,15 +1034,17 @@ impostorRevealBtn.addEventListener('click', () => {
     }
 
     // Genera la lista de nombres de impostores
-    if (impostorIndices.length > 0) {
-        endMessageFinal.textContent = "Los impostores eran:";
+    if (impostorIndices.length > 0 && currentRoundType !== "Nadie es Impostor") {
+        endMessageFinalEl.textContent = "Los impostores eran:"; // CORRECCIÓN: Usar endMessageFinalEl
         impostorIndices.forEach(index => {
             const li = document.createElement('li');
             li.textContent = playerNames[index];
             impostorListEl.appendChild(li);
         });
+    } else if (currentRoundType === "Nadie es Impostor") {
+        endMessageFinalEl.textContent = "¡Nadie era impostor! Todos tenían la palabra clave. (Ganaron los no-impostores)";
     } else {
-        endMessageFinal.textContent = "¡No había impostores esta ronda!";
+        endMessageFinalEl.textContent = "¡Nadie era impostor! Pero fue una ronda normal. (Ganaron los no-impostores)";
     }
 });
 
@@ -994,6 +1060,9 @@ playAgainBtn.addEventListener('click', () => {
 changeSettingsBtn.addEventListener('click', () => {
     stopAlarm();
     renderPlayerNameInputs(); // Vuelve a cargar los inputs de nombre
+    // Se asegura de mostrar los inputs si estaban ocultos al iniciar la partida
+    playerNamesContainer.classList.add('hidden');
+    toggleNamesBtn.textContent = "Cambiar nombres de jugadores";
     showScreen(configScreen);
 });
 
