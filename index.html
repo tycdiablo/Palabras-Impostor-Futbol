@@ -9,7 +9,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Bebas+Neue&family=Inter:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-<!-- Se eliminó el script de Tone.js y toda la lógica de sonido -->
 
 <style>
 :root {
@@ -19,6 +18,8 @@
 --color-text-dark: #222;
 --color-text-light: #fff;
 --color-bg: #e0f7fa;
+--color-success: #28a745;
+--color-danger: #dc3545;
 --font-main: 'Bebas Neue', 'Inter', sans-serif;
 --font-secondary: 'Inter', 'Roboto', sans-serif;
 }
@@ -42,9 +43,13 @@ background-repeat: repeat;
 transition: background 0.5s;
 }
 
-/* NUEVO: Estilo para la alarma del impostor */
 body.impostor-alarm {
-background: #800 !important; /* Rojo oscuro */
+background: radial-gradient(circle at center, #f00 0%, #800 100%) !important;
+animation: subtleAlarm 5s infinite alternate;
+}
+@keyframes subtleAlarm {
+  0% { opacity: 1; }
+  100% { opacity: 0.8; }
 }
 
 .container {
@@ -96,21 +101,10 @@ max-height: 80vh;
 overflow-y: auto;
 }
 
-/* CSS para que el scroll sea más discreto */
-.screen::-webkit-scrollbar {
-width: 8px;
-}
-.screen::-webkit-scrollbar-track {
-background: #f1f1f1;
-border-radius: 10px;
-}
-.screen::-webkit-scrollbar-thumb {
-background: #ccc;
-border-radius: 10px;
-}
-.screen::-webkit-scrollbar-thumb:hover {
-background: #aaa;
-}
+.screen::-webkit-scrollbar { width: 8px; }
+.screen::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+.screen::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+.screen::-webkit-scrollbar-thumb:hover { background: #aaa; }
 
 
 .screen.active {
@@ -227,7 +221,7 @@ border-color: var(--color-primary);
 }
 
 /* Estilos para el selector de categoría */
-#category-selector, #lobby-category-selector {
+#category-selector {
 width: 100%;
 padding: 10px;
 border: 2px solid var(--color-primary);
@@ -290,7 +284,6 @@ font-family: var(--font-main);
 font-size: clamp(2rem, 8vw, 4rem);
 color: var(--color-primary);
 animation: fadeIn 0.5s ease-out;
-/* Se muestra solo el nombre */
 }
 
 #word-display {
@@ -318,6 +311,44 @@ animation: pulse 1.5s infinite;
 50% { transform: scale(1.05); }
 100% { transform: scale(1); }
 }
+
+/* Status de Conexión */
+#connection-status {
+font-family: var(--font-secondary);
+font-size: 0.9rem;
+margin-top: 15px;
+padding: 5px 10px;
+border-radius: 5px;
+font-weight: bold;
+}
+.status-loading { background-color: #ffc107; color: #333; }
+.status-connected { background-color: var(--color-success); color: var(--color-text-light); }
+.status-failed { background-color: var(--color-danger); color: var(--color-text-light); }
+
+/* Sala Online */
+#online-room-id-display, #online-user-id {
+font-size: 1rem;
+font-weight: bold;
+color: var(--color-primary);
+margin-top: 5px;
+word-break: break-all;
+}
+#online-user-id-wrapper {
+font-size: 0.8rem;
+color: #666;
+margin-bottom: 10px;
+}
+.room-member {
+padding: 5px;
+border-bottom: 1px dotted #ccc;
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+.room-member:last-child { border-bottom: none; }
+.member-name { font-weight: bold; }
+.host-badge { background-color: var(--color-accent); color: var(--color-text-dark); padding: 2px 5px; border-radius: 3px; font-size: 0.7rem; }
+
 /* Modal */
 .modal {
 display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%;
@@ -349,189 +380,30 @@ margin-top: 10px;
 font-size: 1.2rem;
 color: var(--color-text-dark);
 }
-/* Info de ronda especial */
 #special-round-info {
 font-size: 1.3rem;
 font-weight: bold;
 color: var(--color-primary);
 margin-top: 10px;
 }
-
-/* --- NUEVOS ESTILOS PARA ONLINE --- */
-#lobby-room-code {
-font-family: var(--font-main);
-font-size: 3rem;
-color: var(--color-primary);
-background: #f0f0f0;
-padding: 10px 20px;
-border-radius: 10px;
-letter-spacing: 3px;
-border: 2px dashed var(--color-secondary);
-}
-
-#lobby-player-list {
-list-style: none;
-padding: 0;
-margin-top: 15px;
-width: 100%;
-max-width: 300px;
-}
-
-#lobby-player-list li {
-font-family: var(--font-secondary);
-font-size: 1.2rem;
-padding: 8px;
-background: #f9f9f9;
-border-radius: 5px;
-margin-bottom: 5px;
-border: 1px solid #eee;
-}
-
-#lobby-player-list li .fa-crown {
-color: var(--color-accent);
-margin-right: 10px;
-}
-
-.lobby-config-view {
-text-align: left;
-padding: 10px 20px;
-background: #f0f0f0;
-border-radius: 10px;
-border: 1px solid #ddd;
-width: 100%;
-max-width: 350px;
-box-sizing: border-box;
-}
-.lobby-config-view p {
-font-family: var(--font-secondary);
-font-size: 1.1rem;
-margin: 8px 0;
-}
-.lobby-config-view span {
-font-weight: bold;
-color: var(--color-primary);
-}
 </style>
 </head>
 <body>
-
-<!-- INICIO: Imports de Firebase (Requerido) -->
-<script type="module">
-    // Importar funciones de Firebase
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, deleteDoc, arrayUnion, arrayRemove, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-    import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-
-    // Poner las funciones en el scope global para que el script de abajo las vea
-    window.firebase = {
-        initializeApp,
-        getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged,
-        getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, deleteDoc, arrayUnion, arrayRemove, runTransaction, serverTimestamp,
-        setLogLevel
-    };
-</script>
-<!-- FIN: Imports de Firebase -->
-
 
 <div class="container">
 <!-- Pantalla de inicio -->
 <div id="start-screen" class="screen active">
 <h1>Impostor Fútbol</h1>
 <p>Descubre el impostor entre tus amigos. ¡Que comience el partido!</p>
+<div id="connection-status" class="status-loading">Conectando...</div>
 <button id="start-game-btn" class="btn">Iniciar Partida Local</button>
-<!-- Botón Online, se deshabilitará hasta que Firebase esté listo -->
-<button id="online-game-btn" class="btn secondary" disabled>Conectando al Servidor...</button>
+<button id="online-game-btn" class="btn secondary" disabled>Sala Online</button>
 </div>
-
-<!-- NUEVO: Pantalla de Menú Online -->
-<div id="online-menu-screen" class="screen">
-<h2>Sala Online</h2>
-<p>Introduce tu nombre para jugar online.</p>
-<input type="text" id="player-name-input-online" class="input-field" placeholder="Tu Nombre">
-<button id="create-room-btn" class="btn">Crear Sala</button>
-<button id="join-room-menu-btn" class="btn secondary">Unirse a Sala</button>
-<button id="back-to-start-btn" class="btn secondary small-btn">Volver</button>
-</div>
-
-<!-- NUEVO: Pantalla de Unirse a Sala -->
-<div id="join-room-screen" class="screen">
-<h2>Unirse a Sala</h2>
-<p>Introduce el código de 6 letras de la sala.</p>
-<input type="text" id="room-code-input" class="input-field" placeholder="LERP0W" maxlength="6" style="text-transform: uppercase;">
-<button id="submit-join-btn" class="btn">Unirse</button>
-<button id="back-to-online-menu-btn" class="btn secondary small-btn">Volver</button>
-</div>
-
-<!-- NUEVO: Pantalla de Lobby (Sala de Espera) -->
-<div id="lobby-screen" class="screen">
-<h2>Sala de Espera</h2>
-<p>Código de la Sala:</p>
-<div id="lobby-room-code">Cargando...</div>
-<h3>Jugadores:</h3>
-<ul id="lobby-player-list">
-<!-- Jugadores se añaden aquí dinámicamente -->
-</ul>
-
-<!-- Controles del Host -->
-<div id="lobby-host-controls" class="hidden">
-<h3>Configuración (Host)</h3>
-<div class="option-group">
-<div class="count-controls">
-<button class="arrow-btn" id="lobby-impostors-minus" aria-label="Disminuir impostores"><i class="fas fa-arrow-left"></i></button>
-<div>
-<div class="option-label">Impostores</div>
-<div class="option-value" id="lobby-impostor-count-display">1</div>
-</div>
-<button class="arrow-btn" id="lobby-impostors-plus" aria-label="Aumentar impostores"><i class="fas fa-arrow-right"></i></button>
-</div>
-</div>
-<div class="option-group">
-<div class="option-label">Tema</div>
-<select id="lobby-category-selector">
-<option value="players">Jugadores de Fútbol</option>
-<option value="clubs">Clubes de Fútbol</option>
-<option value="clashroyale">Cartas de Clash Royale</option>
-<option value="f1Pilots">Pilotos de F1</option>
-<option value="alumnos3ro">Alumnos 3ro</option>
-<option value="genteColegio">Gente del Colegio</option>
-<option value="profes">Profesores</option>
-<option value="cosasCotidianas">Cosas Cotidianas</option>
-<option value="random">Al Azar</option>
-</select>
-</div>
-<div class="option-group checkbox-group">
-<div>
-<input type="checkbox" id="lobby-special-rounds-check">
-<label for="lobby-special-rounds-check">Rondas Especiales</label>
-</div>
-<div>
-<input type="checkbox" id="lobby-impostor-knows-check" checked>
-<label for="lobby-impostor-knows-check">Impostor Sabe</label>
-</div>
-</div>
-<button id="lobby-start-game-btn" class="btn">Iniciar Partida</button>
-</div>
-
-<!-- Vista para Invitados -->
-<div id="lobby-joiner-view" class="hidden">
-<h3>Configuración (Host):</h3>
-<div class="lobby-config-view">
-<p>Impostores: <span id="view-impostor-count">1</span></p>
-<p>Categoría: <span id="view-category">Jugadores de Fútbol</span></p>
-<p>Rondas Especiales: <span id="view-special-rounds">No</span></p>
-<p>Impostor Sabe: <span id="view-impostor-knows">Sí</span></p>
-</div>
-<p><i>Esperando a que el host inicie la partida...</i></p>
-</div>
-<button id="lobby-leave-btn" class="btn secondary small-btn">Salir de la Sala</button>
-</div>
-
 
 <!-- Pantalla de configuración (Local) -->
-<div id="config-screen" class="screen">
-<h2>Configuración (Local)</h2>
-<!-- Cantidad de jugadores -->
+<div id="config-screen-local" class="screen">
+<h2>Configuración Local</h2>
+<!-- Controles de jugadores y opciones de juego -->
 <div class="option-group">
 <div class="count-controls">
 <button class="arrow-btn" id="players-minus" aria-label="Disminuir jugadores"><i class="fas fa-arrow-left"></i></button>
@@ -542,10 +414,8 @@ color: var(--color-primary);
 <button class="arrow-btn" id="players-plus" aria-label="Aumentar jugadores"><i class="fas fa-arrow-right"></i></button>
 </div>
 <button id="toggle-names-btn" class="btn secondary small-btn">Cambiar nombres de jugadores</button>
-<div id="player-names-container" class="hidden">
+<div id="player-names-container" class="hidden"></div>
 </div>
-</div>
-<!-- Cantidad de impostores -->
 <div class="option-group">
 <div class="count-controls">
 <button class="arrow-btn" id="impostors-minus" aria-label="Disminuir impostores"><i class="fas fa-arrow-left"></i></button>
@@ -556,10 +426,9 @@ color: var(--color-primary);
 <button class="arrow-btn" id="impostors-plus" aria-label="Aumentar impostores"><i class="fas fa-arrow-right"></i></button>
 </div>
 </div>
-<!-- Selector de categoría -->
 <div class="option-group">
 <div class="option-label">Tema de la Palabra</div>
-<select id="category-selector">
+<select id="category-selector-local">
 <option value="players">Jugadores de Fútbol</option>
 <option value="clubs">Clubes de Fútbol</option>
 <option value="clashroyale">Cartas de Clash Royale</option>
@@ -571,22 +440,74 @@ color: var(--color-primary);
 <option value="random">Al Azar</option>
 </select>
 </div>
-<!-- Opciones de Juego -->
 <div class="option-group checkbox-group">
-<div>
-<input type="checkbox" id="special-rounds-check">
-<label for="special-rounds-check">Habilitar Rondas Especiales</label>
+<div><input type="checkbox" id="special-rounds-check-local"><label for="special-rounds-check-local">Habilitar Rondas Especiales</label></div>
+<div><input type="checkbox" id="impostor-knows-check-local" checked><label for="impostor-knows-check-local">El impostor sabe que es impostor</label></div>
 </div>
-<div>
-<input type="checkbox" id="impostor-knows-check" checked>
-<label for="impostor-knows-check">El impostor sabe que es impostor</label>
-</div>
-</div>
-<button id="start-round-btn" class="btn">Iniciar Partida</button>
+<button id="start-round-btn-local" class="btn">Iniciar Partida</button>
 <button id="back-to-start-btn-local" class="btn secondary small-btn">Volver</button>
 </div>
 
-<!-- Pantalla de juego (mostrar palabra) -->
+<!-- Pantalla de Sala Online -->
+<div id="online-screen" class="screen">
+<h2>Sala Online</h2>
+<p id="online-user-id-wrapper">Mi ID de Usuario: <span id="online-user-id">Cargando...</span></p>
+
+<!-- Opciones de Sala -->
+<div class="option-group">
+<input type="text" id="room-name-input" class="input-field" placeholder="Nombre de tu sala (e.g., Campeones)">
+<button id="create-room-btn" class="btn">Crear Sala</button>
+</div>
+
+<div class="option-group">
+<input type="text" id="join-room-id-input" class="input-field" placeholder="ID de Sala a Unirse">
+<button id="join-room-btn" class="btn secondary">Unirse a Sala</button>
+</div>
+
+<button id="back-to-start-btn-online" class="btn secondary small-btn">Volver</button>
+</div>
+
+<!-- Pantalla de Espera de Sala (Online/Host) -->
+<div id="lobby-screen" class="screen">
+<h2 id="lobby-title">Sala: </h2>
+<p id="lobby-room-id-display">ID de Sala: <span id="online-room-id-display"></span></p>
+
+<!-- Lista de Miembros -->
+<div class="option-group" style="max-width: 350px; width: 100%;">
+<div class="option-label" style="border-bottom: 2px solid var(--color-primary);">Miembros de la Sala</div>
+<div id="room-members-list" style="max-height: 200px; overflow-y: auto;">
+<!-- Miembros se cargarán aquí -->
+</div>
+</div>
+
+<!-- Opciones de Host/Comunes -->
+<div id="host-options">
+<h3>Opciones de Partida</h3>
+<div class="option-group">
+<div class="option-label">Impostores</div>
+<div class="count-controls">
+<button class="arrow-btn" id="impostors-minus-online"><i class="fas fa-arrow-left"></i></button>
+<div class="option-value" id="impostor-count-display-online">1</div>
+<button class="arrow-btn" id="impostors-plus-online"><i class="fas fa-arrow-right"></i></button>
+</div>
+</div>
+<div class="option-group">
+<div class="option-label">Tema</div>
+<select id="category-selector-online" class="input-field">
+<option value="players">Jugadores de Fútbol</option>
+<!-- Otras opciones de categoría aquí -->
+</select>
+</div>
+<button id="start-online-game-btn" class="btn">Iniciar Juego Online</button>
+</div>
+
+<!-- Opción de jugador normal -->
+<p id="wait-message" style="color: var(--color-primary); font-weight: bold; margin-top: 15px;" class="hidden">Esperando que el Host inicie la partida...</p>
+
+<button id="leave-room-btn" class="btn secondary small-btn">Abandonar Sala</button>
+</div>
+
+<!-- Pantalla de juego (mostrar palabra) - Compartida con Local -->
 <div id="word-screen" class="screen">
 <h2 id="player-name-display">Es el turno de...</h2>
 <div class="game-display">
@@ -595,6 +516,7 @@ color: var(--color-primary);
 </div>
 <button id="next-player-btn" class="btn secondary">Siguiente Jugador</button>
 </div>
+
 <!-- Pantalla final -->
 <div id="end-screen" class="screen">
 <h2>¡Final de la Ronda!</h2>
@@ -619,56 +541,43 @@ color: var(--color-primary);
 </div>
 </div>
 
-<!-- Audio de alarma (debe estar fuera del container) -->
-<audio id="alarm-sound" src="placeholder_alarm.mp3" loop preload="auto"></audio>
-
-
 <script type="module">
-// --- Firebase (globales) ---
-// Estas variables se llenarán con la inicialización de Firebase
-let db, auth, userId, userName, appId, roomsPath;
-let currentRoomId = null;
-let isHost = false;
-let roomUnsubscribe = null; // Para detener el listener de Firestore
-let isFirebaseReady = false; // Flag para confirmar que la autenticación terminó
+import { initializeApp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, onSnapshot, collection, query, addDoc, updateDoc, arrayUnion, arrayRemove, deleteDoc, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// --- BASE DE DATOS DE PALABRAS ---
+// --- BASE DE DATOS DE PALABRAS (Mantenida localmente) ---
 const playersList = [
 "Lionel Messi", "Cristiano Ronaldo", "Diego Maradona", "Pelé", "Zinedine Zidane",
-"Ronaldo Nazário", "Johan Cruyff", "Franz Beckenbauer", "Garrincha", "Denzel Dumfries",
-"Alfredo Di Stéfano", "Ferenc Puskás", "Zlatan Ibrahimovic", "Marco van Basten", "Zlatan Ibrahimović",
-"Andrés Iniesta", "Xavi Hernández", "Ronaldinho Gaúcho", "Neymar Jr.", "Kylian Mbappé",
-"Erling Haaland", "Luka Modrić", "Kevin De Bruyne", "Mohamed Salah", "Robert Lewandowski",
-"Sergio Ramos", "Virgil van Dijk", "Manuel Neuer", "Alisson Becker", "Marc-André ter Stegen",
-"Paulo Dybala", "Ángel Di María", "Lautaro Martínez", "Julián Álvarez", "Frank Fabra",
-"N'Golo Kanté", "Sadio Mané", "Harry Kane", "Son Heung-min", "Thierry Henry",
-"Didier Drogba", "Samuel Eto'o", "Arjen Robben", "Franck Ribéry", "Carles Puyol",
-"Gerard Piqué", "Andrea Pirlo", "Gianluigi Buffon", "Iker Casillas", "David Beckham",
-"Kaká", "Wayne Rooney", "Frank Lampard", "Steven Gerrard", "Paolo Maldini",
-"Roberto Baggio", "Gabriel Batistuta", "Federico Chiesa", "Romario", "Bebeto",
+"Ronaldo Nazário", "Johan Cruyff", "Franz Beckenbauer", "Denzel Dumfries",
+"Alfredo Di Stéfano", "Marco van Basten", "Andrés Iniesta", "Xavi Hernández", "Ronaldinho Gaúcho",
+"Neymar Jr.", "Kylian Mbappé", "Erling Haaland", "Luka Modrić", "Kevin De Bruyne", 
+"Mohamed Salah", "Robert Lewandowski", "Sergio Ramos", "Virgil van Dijk", "Manuel Neuer",
+"Alisson Becker", "Marc-André ter Stegen", "Paulo Dybala", "Ángel Di María", "Lautaro Martínez",
+"Julián Álvarez", "Frank Fabra", "N'Golo Kanté", "Sadio Mané", "Harry Kane", 
+"Son Heung-min", "Thierry Henry", "Didier Drogba", "Samuel Eto'o", "Arjen Robben", 
+"Franck Ribéry", "Carles Puyol", "Gerard Piqué", "Andrea Pirlo", "Gianluigi Buffon", 
+"Iker Casillas", "David Beckham", "Kaká", "Wayne Rooney", "Frank Lampard",
+"Steven Gerrard", "Paolo Maldini", "Roberto Baggio", "Gabriel Batistuta", "Federico Chiesa",
 "Javier Zanetti", "Gonzalo Montiel", "Juan Román Riquelme", "Carlos Tévez", "Sergio Agüero",
 "Diego Simeone", "Alan Velasco", "Mascherano", "Javier Saviola", "Pablo Aimar",
 "Radamel Falcao", "James Rodríguez", "Luis Suárez", "Edinson Cavani", "Arturo Vidal",
-"Alexis Sánchez", "Claudio Bravo", "Keylor Navas", "Christian Pulisic",
-"Rodrigo De Paul", "Chicharito Hernández",
+"Alexis Sánchez", "Christian Pulisic", "Rodrigo De Paul", "Chicharito Hernández",
 "Guillermo Ochoa", "Francesco Totti", "Alessandro Del Piero", "Giorgio Chiellini",
 "Leonardo Bonucci", "Nahuel Molina", "Mario Balotelli", "Paul Pogba", "Antoine Griezmann",
 "Karim Benzema", "Vinícius Jr.", "Rodrygo", "Federico Valverde", "Casemiro",
 "Toni Kroos", "Thomas Müller", "Joshua Kimmich", "Manuel Neuer", "Mesut Özil",
-"Marco Reus", "Leroy Sané", "Kai Havertz", "Timo Werner", "Mats Hummels",
-"Jude Bellingham", "Phil Foden", "Jack Grealish", "Marcus Rashford", "Bukayo Saka",
-"Mason Mount", "Declan Rice", "Trent Alexander-Arnold", "Kyle Walker", "Raheem Sterling",
-"Hakim Ziyech", "Achraf Hakimi", "Riyad Mahrez", "André Onana",
-"Christian Eriksen", "Pierre-Emerick Aubameyang",
-"Heung-Min Son", "Miguel Merentiel",
-"Ivan Rakitić", "Josko Gvardiol", "Gareth Bale",
-"Frank Fabra", "Raúl Asencio", "Hugo Lloris", "Richarlison",
+"Marco Reus", "Leroy Sané", "Kai Havertz", "Timo Werner", "Jude Bellingham", 
+"Phil Foden", "Jack Grealish", "Marcus Rashford", "Bukayo Saka", "Mason Mount",
+"Declan Rice", "Trent Alexander-Arnold", "Kyle Walker", "Raheem Sterling", "Hakim Ziyech",
+"Achraf Hakimi", "Riyad Mahrez", "André Onana", "Christian Eriksen", "Pierre-Emerick Aubameyang",
+"Heung-Min Son", "Miguel Merentiel", "Ivan Rakitić", "Josko Gvardiol", "Gareth Bale",
 "Bruno Fernandes", "Bernardo Silva", "João Félix", "Rúben Dias", "Raphael Varane",
 "Raphael Guerreiro", "João Cancelo", "Gonçalo Ramos", "Vitinha", "Darwin Núñez",
 "Luis Díaz", "Luis Muriel", "Juan Guillermo Cuadrado", "David Ospina", "David Neres",
 "Antony", "Fred", "Gabriel Martinelli", "Gabriel Jesus", "Vini Jr",
 "Sergio Busquets", "Jordi Alba", "Ferran Torres", "Gavi", "Pedri",
-"Emiliano Martínez", "Alejandro Garnacho", "Nico Otamendi"
+"Emiliano Martínez", "Alejandro Garnacho", "Nico Otamendi", "Ponzio", "Ortega"
 ];
 const clubsList = [
 "Real Madrid", "FC Barcelona", "Manchester United", "Liverpool FC", "Bayern Múnich",
@@ -749,7 +658,6 @@ const cosasCotidianasList = [
 "Libro", "Sofá", "Televisor", "Auto", "Bicicleta", "Colectivo", "Semáforo", "Árbol", 
 "Pasto", "Nube", "Sol", "Luna", "Cepillo de dientes", "Ducha", "Jabón", "Shampoo"
 ];
-// Listas de palabras unificadas para acceso global
 const allWordLists = {
     players: playersList,
     clubs: clubsList,
@@ -758,88 +666,89 @@ const allWordLists = {
     alumnos3ro: alumnos3roList,
     genteColegio: genteColegioList,
     profes: profesList,
-    cosasCotidianas: cosasCotidianasList
+    cosasCotidianas: cosasCotidianasList,
+    random: [...playersList, ...clubsList, ...clashRoyaleList, ...f1PilotsList, ...alumnos3roList, ...genteColegioList, ...profesList, ...cosasCotidianasList]
 };
+const categoryNames = {
+    players: "Jugadores de Fútbol",
+    clubs: "Clubes de Fútbol",
+    clashroyale: "Cartas de Clash Royale",
+    f1Pilots: "Pilotos de F1",
+    alumnos3ro: "Alumnos 3ro",
+    genteColegio: "Gente del Colegio",
+    profes: "Profesores",
+    cosasCotidianas: "Cosas Cotidianas",
+    random: "Al Azar"
+}
 
-// --- VARIABLES DE ESTADO (JUEGO LOCAL) ---
+// --- FIREBASE GLOBALES ---
+let app, db, auth;
+let currentUserId = null;
+let currentAppId = null;
+let isFirebaseConnected = false;
+let roomUnsubscribe = null; // Listener para la sala
+
+// --- VARIABLES DE ESTADO LOCAL/ONLINE ---
+let gameMode = 'local'; // 'local' o 'online'
+let currentRoomId = null;
+let isHost = false;
+let localPlayerName = `Invitado-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+
+// LOCAL GAME STATE
 let playerCount = 3;
 let impostorCount = 1;
-let playerNames = ["Jugador 1", "Jugador 2", "Jugador 3"]; // Nombres para el juego (local o sincronizado)
+let playerNames = ["Jugador 1", "Jugador 2", "Jugador 3"]; 
+let selectedCategoryLocal = "players";
+let enableSpecialRoundsLocal = false;
+let impostorKnowsLocal = true;
+
+// SHARED GAME STATE (Local/Online)
 let impostorIndices = [];
 let wordForPlayers = "";
 let wordForImpostor = "";
 let currentPlayerIndex = 0;
-let selectedCategory = "players";
-let enableSpecialRounds = false;
-let impostorKnows = true;
 let currentRoundType = "normal";
 
-// --- REFERENCIAS DEL DOM (Pantallas) ---
+
+// --- REFERENCIAS DEL DOM ---
 const startScreen = document.getElementById('start-screen');
-const configScreen = document.getElementById('config-screen');
+const configScreenLocal = document.getElementById('config-screen-local');
+const onlineScreen = document.getElementById('online-screen');
+const lobbyScreen = document.getElementById('lobby-screen');
 const wordScreen = document.getElementById('word-screen');
 const endScreen = document.getElementById('end-screen');
-const messageModal = document.getElementById('message-modal');
-// Nuevas pantallas online
-const onlineMenuScreen = document.getElementById('online-menu-screen');
-const joinRoomScreen = document.getElementById('join-room-screen');
-const lobbyScreen = document.getElementById('lobby-screen');
 
-// --- REFERENCIAS DEL DOM (Botones Inicio) ---
 const startGameBtn = document.getElementById('start-game-btn');
 const onlineGameBtn = document.getElementById('online-game-btn');
-const backToStartBtn = document.getElementById('back-to-start-btn');
-const backToStartBtnLocal = document.getElementById('back-to-start-btn-local');
-
-// --- REFERENCIAS DEL DOM (Menú Online) ---
-const playerNameInputOnline = document.getElementById('player-name-input-online');
+const connectionStatusEl = document.getElementById('connection-status');
+const onlineUserIdEl = document.getElementById('online-user-id');
+const roomNameInput = document.getElementById('room-name-input');
 const createRoomBtn = document.getElementById('create-room-btn');
-const joinRoomMenuBtn = document.getElementById('join-room-menu-btn');
-const roomCodeInput = document.getElementById('room-code-input');
-const submitJoinBtn = document.getElementById('submit-join-btn');
-const backToOnlineMenuBtn = document.getElementById('back-to-online-menu-btn');
+const joinRoomIdInput = document.getElementById('join-room-id-input');
+const joinRoomBtn = document.getElementById('join-room-btn');
+const backToStartBtnLocal = document.getElementById('back-to-start-btn-local');
+const backToStartBtnOnline = document.getElementById('back-to-start-btn-online');
+const leaveRoomBtn = document.getElementById('leave-room-btn');
 
-// --- REFERENCIAS DEL DOM (Lobby) ---
-const lobbyRoomCode = document.getElementById('lobby-room-code');
-const lobbyPlayerList = document.getElementById('lobby-player-list');
-const lobbyHostControls = document.getElementById('lobby-host-controls');
-const lobbyJoinerView = document.getElementById('lobby-joiner-view');
-const lobbyImpostorsMinus = document.getElementById('lobby-impostors-minus');
-const lobbyImpostorsPlus = document.getElementById('lobby-impostors-plus');
-const lobbyImpostorCountDisplay = document.getElementById('lobby-impostor-count-display');
-const lobbyCategorySelector = document.getElementById('lobby-category-selector');
-const lobbySpecialRoundsCheck = document.getElementById('lobby-special-rounds-check');
-const lobbyImpostorKnowsCheck = document.getElementById('lobby-impostor-knows-check');
-const lobbyStartGameBtn = document.getElementById('lobby-start-game-btn');
-const lobbyLeaveBtn = document.getElementById('lobby-leave-btn');
-// Vistas de solo lectura para invitados
-const viewImpostorCount = document.getElementById('view-impostor-count');
-const viewCategory = document.getElementById('view-category');
-const viewSpecialRounds = document.getElementById('view-special-rounds');
-const viewImpostorKnows = document.getElementById('view-impostor-knows');
+// Lobby elements
+const lobbyTitleEl = document.getElementById('lobby-title');
+const onlineRoomIdDisplayEl = document.getElementById('online-room-id-display');
+const roomMembersListEl = document.getElementById('room-members-list');
+const hostOptionsEl = document.getElementById('host-options');
+const waitMessageEl = document.getElementById('wait-message');
+const impostorCountOnlineEl = document.getElementById('impostor-count-display-online');
+const impostorsMinusOnlineBtn = document.getElementById('impostors-minus-online');
+const impostorsPlusOnlineBtn = document.getElementById('impostors-plus-online');
+const categorySelectorOnline = document.getElementById('category-selector-online');
+const startOnlineGameBtn = document.getElementById('start-online-game-btn');
 
-
-// --- REFERENCIAS DEL DOM (Config Local) ---
-const playersMinusBtn = document.getElementById('players-minus');
-const playersPlusBtn = document.getElementById('players-plus');
-const impostorsMinusBtn = document.getElementById('impostors-minus');
-const impostorsPlusBtn = document.getElementById('impostors-plus');
-const toggleNamesBtn = document.getElementById('toggle-names-btn');
-const playerCountEl = document.getElementById('player-count-display');
-const impostorCountEl = document.getElementById('impostor-count-display');
-const playerNamesContainer = document.getElementById('player-names-container');
-const categorySelector = document.getElementById('category-selector');
-const specialRoundsCheck = document.getElementById('special-rounds-check');
-const impostorKnowsCheck = document.getElementById('impostor-knows-check');
-const startRoundBtn = document.getElementById('start-round-btn');
-
-// --- REFERENCIAS DEL DOM (Juego) ---
+// Game elements (shared)
 const playerNameDisplayEl = document.getElementById('player-name-display');
 const wordDisplayEl = document.getElementById('word-display');
 const showWordBtn = document.getElementById('show-word-btn');
 const nextPlayerBtn = document.getElementById('next-player-btn');
 
-// --- REFERENCIAS DEL DOM (Final) ---
+// Final screen (shared)
 const impostorRevealBtn = document.getElementById('impostor-reveal-btn');
 const revealArea = document.getElementById('reveal-area');
 const specialRoundInfoEl = document.getElementById('special-round-info');
@@ -849,455 +758,393 @@ const impostorListEl = document.getElementById('impostor-list');
 const playAgainBtn = document.getElementById('play-again-btn');
 const changeSettingsBtn = document.getElementById('change-settings-btn');
 
-// --- REFERENCIAS DEL DOM (Otros) ---
+// Local config elements
+const playerCountEl = document.getElementById('player-count-display');
+const impostorCountEl = document.getElementById('impostor-count-display');
+const playerNamesContainer = document.getElementById('player-names-container');
+const categorySelectorLocal = document.getElementById('category-selector-local');
+const specialRoundsCheckLocal = document.getElementById('special-rounds-check-local');
+const impostorKnowsCheckLocal = document.getElementById('impostor-knows-check-local');
+const startRoundBtnLocal = document.getElementById('start-round-btn-local');
+
+// Modal elements
 const modalText = document.getElementById('modal-text');
 const modalCloseBtn = document.getElementById('modal-close-btn');
-const alarmSound = document.getElementById('alarm-sound');
 
+// --- FIREBASE INICIALIZACIÓN ---
 
-// --- FUNCIONES DE INTERFAZ ---
-function showMessage(message) {
-modalText.textContent = message;
-messageModal.style.display = 'flex';
-}
-modalCloseBtn.addEventListener('click', () => {
-messageModal.style.display = 'none';
-});
-
-function showScreen(screen) {
-document.querySelectorAll('.screen').forEach(s => {
-s.classList.remove('active');
-});
-screen.classList.add('active');
+function getRoomRef(roomId) {
+    // Las salas son públicas para que cualquier usuario pueda unirse
+    const roomPath = `/artifacts/${currentAppId}/public/data/rooms/${roomId}`;
+    return doc(db, roomPath);
 }
 
-// Detener alarma (función de ayuda)
-function stopAlarm() {
-    document.body.classList.remove('impostor-alarm');
-    alarmSound.pause();
-    if (alarmSound.currentTime) {
-        alarmSound.currentTime = 0;
-    }
-}
+function initFirebase() {
+    setLogLevel('debug'); // Habilitar logs para depuración
 
-// --- FUNCIÓN DE UTILIDAD: RETRY CON EXPONENTIAL BACKOFF ---
-async function retryOperation(fn, maxRetries = 3) {
-    for (let i = 0; i < maxRetries; i++) {
-        try {
-            return await fn();
-        } catch (error) {
-            if (i === maxRetries - 1) throw error;
-            const delay = Math.pow(2, i) * 1000 + Math.random() * 500; // 1s, 2s, 4s (+ jitter)
-            console.log(`Retry attempt ${i + 1} failed. Retrying in ${delay.toFixed(0)}ms...`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-        }
-    }
-}
-
-// --- FUNCIONES DE FIREBASE (ACTUALIZADAS PARA SER MÁS ROBUSTAS) ---
-async function initFirebase() {
-    // 1. Configuración de Variables
-    const firebaseConfigString = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
-    appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-
-    let firebaseConfig;
+    // 1. Obtener ID de App y Configuración de Firebase
+    currentAppId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfigString = typeof __firebase_config !== 'undefined' ? __firebase_config : 'null';
+    
+    let firebaseConfig = null;
     try {
         firebaseConfig = JSON.parse(firebaseConfigString);
+        if (!firebaseConfig.apiKey) throw new Error("API Key missing from config.");
     } catch (e) {
-        console.error("Firebase: Error al parsear la configuración. El servidor está mal configurado o faltan variables.");
-        onlineGameBtn.textContent = "ERROR: Configuración Inválida";
+        console.warn("Error al parsear __firebase_config o faltan credenciales:", e);
+        connectionStatusEl.textContent = "Conexión Fallida (Solo Modo Local)";
+        connectionStatusEl.classList.add('status-failed');
         onlineGameBtn.disabled = true;
-        showMessage("El servidor no pudo ser configurado (JSON inválido). El modo online está desactivado.");
-        isFirebaseReady = false;
-        return;
+        isFirebaseConnected = false;
+        return; // Detener si la configuración es inválida
     }
 
-    if (!firebaseConfig.apiKey) {
-        console.error("Firebase: No se encontró apiKey. Es probable que la configuración no esté disponible.");
-        onlineGameBtn.textContent = "ERROR: Configuración Faltante";
-        onlineGameBtn.disabled = true;
-        showMessage("El entorno no proporcionó la configuración de Firebase necesaria. El modo online está desactivado.");
-        isFirebaseReady = false;
-        return;
-    }
-    
-    // 2. Establecer UI a estado de carga
-    onlineGameBtn.textContent = "Conectando al Servidor...";
-    onlineGameBtn.disabled = true;
-
-    // 3. Inicializar Firebase
-    const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore, setLogLevel } = window.firebase;
-
-    const app = initializeApp(firebaseConfig);
-    db = getFirestore(app);
+    // 2. Inicializar App y Servicios
+    app = initializeApp(firebaseConfig);
     auth = getAuth(app);
-    setLogLevel('Debug'); // Para ver logs de Firestore
-    
-    roomsPath = `/artifacts/${appId}/public/data/impostor_rooms`;
+    db = getFirestore(app);
 
-    try {
-        // 4. Intentar la Autenticación con reintentos
-        const signInTask = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                console.log("Firebase: Intentando signInWithCustomToken...");
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                console.log("Firebase: Intentando signInAnonymously...");
-                await signInAnonymously(auth);
-            }
-        };
-        
-        await retryOperation(signInTask, 3);
-        console.log("Firebase: Autenticación inicial exitosa o completada.");
-        
-        // 5. Esperar la confirmación final del estado de autenticación (onAuthStateChanged)
-        await new Promise((resolve, reject) => {
-            // Establecer un timeout de respaldo en caso de que onAuthStateChanged nunca se dispare
-            const timeout = setTimeout(() => {
-                unsubscribe();
-                reject(new Error("onAuthStateChanged timeout. No se pudo confirmar el estado de auth en 8 segundos."));
-            }, 8000); // 8 segundos de espera
+    // 3. Listener de Autenticación
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            currentUserId = user.uid;
+            onlineUserIdEl.textContent = currentUserId;
             
-            const unsubscribe = onAuthStateChanged(auth, (user) => {
-                clearTimeout(timeout);
-                if (user) {
-                    userId = user.uid;
-                    console.log("Firebase: Conexión y Auth confirmada. UID:", userId);
+            connectionStatusEl.textContent = "Modo Online Activo";
+            connectionStatusEl.classList.remove('status-loading', 'status-failed');
+            connectionStatusEl.classList.add('status-connected');
+            onlineGameBtn.disabled = false;
+            isFirebaseConnected = true;
+
+        } else {
+            // Intentar iniciar sesión
+            try {
+                if (typeof __initial_auth_token !== 'undefined') {
+                    await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
-                    // Esto no debería ocurrir si el signIn fue exitoso, pero lo manejamos
-                    console.warn("Firebase: onAuthStateChanged completado, pero el usuario no está logueado.");
-                    userId = 'guest-' + crypto.randomUUID(); // Fallback ID
+                    await signInAnonymously(auth);
                 }
-                
-                isFirebaseReady = true;
-                onlineGameBtn.textContent = "Sala Online";
-                onlineGameBtn.disabled = false;
-                
-                unsubscribe();
-                resolve();
-            }, (error) => {
-                clearTimeout(timeout);
-                unsubscribe();
-                reject(error);
-            });
-        });
-        
-    } catch (error) {
-        // 6. Falla crítica
-        console.error("Firebase: Falla crítica de conexión/autenticación final:", error.message || error);
-        showMessage(`Fallo crítico al conectar al servidor: ${error.message || 'Error desconocido'}. El modo online está deshabilitado.`);
-        onlineGameBtn.textContent = "ERROR: Conexión Fallida";
-        onlineGameBtn.disabled = true;
-        isFirebaseReady = false;
-    }
-}
-
-function generateRoomCode() {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
-}
-
-// Función principal de escucha de la sala
-function listenToRoom(roomId) {
-    const { doc, onSnapshot } = window.firebase;
-    currentRoomId = roomId;
-    
-    // Si ya hay un listener, detenerlo
-    if (roomUnsubscribe) roomUnsubscribe();
-
-    const roomRef = doc(db, roomsPath, roomId);
-    roomUnsubscribe = onSnapshot(roomRef, (docSnap) => {
-        if (!docSnap.exists()) {
-            showMessage("La sala ha sido cerrada por el host.");
-            leaveRoom();
-            return;
-        }
-
-        const roomData = docSnap.data();
-        
-        // Sincronizar UI del Lobby
-        if (lobbyScreen.classList.contains('active')) {
-            lobbyRoomCode.textContent = roomId;
-            lobbyPlayerList.innerHTML = '';
-            roomData.players.forEach(player => {
-                const li = document.createElement('li');
-                li.textContent = player.name;
-                if (player.userId === roomData.hostId) {
-                    const icon = document.createElement('i');
-                    icon.className = 'fas fa-crown';
-                    li.prepend(icon);
-                }
-                lobbyPlayerList.appendChild(li);
-            });
-
-            // Mostrar controles de host o vista de invitado
-            lobbyHostControls.style.display = isHost ? 'block' : 'none';
-            lobbyJoinerView.style.display = isHost ? 'none' : 'block';
-
-            // Actualizar vista de invitado
-            if (!isHost) {
-                viewImpostorCount.textContent = roomData.config.impostorCount;
-                const categoryOption = lobbyCategorySelector.querySelector(`option[value="${roomData.config.category}"]`);
-                viewCategory.textContent = categoryOption ? categoryOption.text : roomData.config.category;
-                viewSpecialRounds.textContent = roomData.config.specialRounds ? 'Sí' : 'No';
-                viewImpostorKnows.textContent = roomData.config.impostorKnows ? 'Sí' : 'No';
+            } catch (error) {
+                console.error("Firebase Auth Falló:", error);
+                connectionStatusEl.textContent = "Conexión Fallida (Solo Modo Local)";
+                connectionStatusEl.classList.add('status-failed');
+                onlineGameBtn.disabled = true;
+                isFirebaseConnected = false;
             }
-            
-            // Habilitar/deshabilitar botón de empezar
-            lobbyStartGameBtn.disabled = roomData.players.length < 3;
-        }
-        
-        // Sincronizar inicio del juego
-        // Si el estado es "playing" y *no* estamos ya en la pantalla de juego
-        if (roomData.gameState.status === 'playing' && !wordScreen.classList.contains('active')) {
-            console.log("Iniciando juego desde Firestore...");
-            // Cargar estado del juego desde Firestore a las variables locales
-            const gs = roomData.gameState;
-            wordForPlayers = gs.wordForPlayers;
-            wordForImpostor = gs.wordForImpostor;
-            impostorIndices = gs.impostorIndices;
-            currentRoundType = gs.currentRoundType;
-            
-            // Cargar jugadores desde el lobby
-            playerNames = roomData.players.map(p => p.name);
-            playerCount = playerNames.length;
-            
-            // Configuración
-            impostorCount = roomData.config.impostorCount;
-            selectedCategory = roomData.config.category;
-            enableSpecialRounds = roomData.config.specialRounds;
-            impostorKnows = roomData.config.impostorKnows;
-            
-            currentPlayerIndex = 0; // Siempre empieza el primero
-            updateWordScreenUI();
-            showScreen(wordScreen);
-        }
-        
-        // Sincronizar vuelta al lobby
-        if (roomData.gameState.status === 'lobby' && !lobbyScreen.classList.contains('active')) {
-             console.log("Volviendo al lobby...");
-             stopAlarm();
-             showScreen(lobbyScreen);
         }
     });
 }
 
-// Crear una sala (Host)
-async function handleCreateRoom() {
-    const { setDoc, doc, serverTimestamp } = window.firebase;
-    
-    userName = playerNameInputOnline.value.trim() || `Jugador ${userId.substring(0, 4)}`;
-    if (!userName) {
-        showMessage("Por favor, introduce un nombre.");
-        return;
+// --- FUNCIONES DE INTERFAZ Y UTILIDAD ---
+
+function showMessage(message) {
+    modalText.textContent = message;
+    messageModal.style.display = 'flex';
+}
+modalCloseBtn.addEventListener('click', () => {
+    messageModal.style.display = 'none';
+});
+
+function showScreen(screen) {
+    document.querySelectorAll('.screen').forEach(s => {
+        s.classList.remove('active');
+    });
+    screen.classList.add('active');
+}
+
+function stopAlarm() {
+    document.body.classList.remove('impostor-alarm');
+}
+
+function generateRandomRoomId() {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
+function getWordList(category) {
+    if (category === 'random') {
+        const categories = Object.keys(allWordLists).filter(c => c !== 'random');
+        const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+        return allWordLists[randomCategory];
     }
+    return allWordLists[category] || allWordLists.players;
+}
+
+// --- LÓGICA DE JUEGO MULTIJUGADOR (ONLINE) ---
+
+async function createRoom(roomName) {
+    if (!currentUserId) return showMessage("Error: Usuario no autenticado.");
+    if (!isFirebaseConnected) return showMessage("Error: Firebase no está conectado.");
+
+    const roomId = generateRandomRoomId();
+    const roomRef = getRoomRef(roomId);
     
-    const roomId = generateRoomCode();
-    isHost = true;
-    
-    // Configuración inicial (la que está en los controles del lobby por defecto)
-    const initialConfig = {
+    // Obtener un nombre base para el jugador
+    const baseName = roomNameInput.value.trim() || localPlayerName;
+    const roomTitle = roomName.trim() || `Sala de ${baseName}`;
+
+    const newRoomData = {
+        title: roomTitle,
+        hostId: currentUserId,
+        status: 'lobby', // 'lobby', 'in_game', 'finished'
         impostorCount: 1,
         category: 'players',
-        specialRounds: false,
-        impostorKnows: true
+        currentPlayerIndex: 0,
+        wordForPlayers: "",
+        wordForImpostor: "",
+        impostorIndices: [],
+        currentRoundType: 'normal',
+        players: [{
+            id: currentUserId,
+            name: baseName,
+            isHost: true
+        }],
+        lastUpdated: Date.now()
     };
-    
-    const roomData = {
-        hostId: userId,
-        players: [{ userId: userId, name: userName }],
-        config: initialConfig,
-        gameState: { status: 'lobby' },
-        createdAt: serverTimestamp() // Opcional, para limpiar salas viejas
-    };
-    
+
     try {
-        const roomRef = doc(db, roomsPath, roomId);
-        await setDoc(roomRef, roomData);
-        listenToRoom(roomId);
+        await setDoc(roomRef, newRoomData);
+        currentRoomId = roomId;
+        isHost = true;
+        gameMode = 'online';
+        startRoomListener(roomId);
         showScreen(lobbyScreen);
-    } catch (error) {
-        console.error("Error al crear la sala:", error);
-        showMessage("Error al crear la sala. Inténtalo de nuevo.");
+    } catch (e) {
+        console.error("Error al crear sala:", e);
+        showMessage("No se pudo crear la sala. Inténtalo de nuevo.");
     }
 }
 
-// Unirse a una sala (Invitado)
-async function handleJoinRoom() {
-    const { doc, getDoc, updateDoc, arrayUnion } = window.firebase;
+async function joinRoom(roomId) {
+    if (!currentUserId) return showMessage("Error: Usuario no autenticado.");
+    if (!isFirebaseConnected) return showMessage("Error: Firebase no está conectado.");
     
-    userName = playerNameInputOnline.value.trim() || `Jugador ${userId.substring(0, 4)}`;
-    if (!userName) {
-        showMessage("Por favor, introduce un nombre en el menú anterior.");
-        showScreen(onlineMenuScreen);
-        return;
-    }
+    const roomRef = getRoomRef(roomId);
     
-    const roomId = roomCodeInput.value.toUpperCase();
-    if (roomId.length !== 6) {
-        showMessage("El código debe tener 6 letras.");
-        return;
-    }
-
-    const roomRef = doc(db, roomsPath, roomId);
-    
+    // Usar una transacción para asegurar que no se une a una sala inexistente o llena
     try {
-        const docSnap = await getDoc(roomRef);
-        if (!docSnap.exists()) {
-            showMessage("No se encontró ninguna sala con ese código.");
-            return;
-        }
-        
-        const roomData = docSnap.data();
-        if (roomData.players.length >= 34) { // Límite de jugadores
-             showMessage("La sala está llena.");
-             return;
-        }
-
-        if (roomData.gameState.status !== 'lobby') {
-            showMessage("La partida ya ha comenzado.");
-            return;
-        }
-
-        // Añadir jugador
-        await updateDoc(roomRef, {
-            players: arrayUnion({ userId: userId, name: userName })
+        await runTransaction(db, async (transaction) => {
+            const roomDoc = await transaction.get(roomRef);
+            if (!roomDoc.exists()) {
+                throw new Error("La sala no existe.");
+            }
+            const roomData = roomDoc.data();
+            
+            if (roomData.status !== 'lobby') {
+                throw new Error("La partida ya ha comenzado.");
+            }
+            
+            const existingPlayer = roomData.players.find(p => p.id === currentUserId);
+            if (!existingPlayer) {
+                // Agregar al nuevo jugador
+                const newPlayer = {
+                    id: currentUserId,
+                    name: localPlayerName,
+                    isHost: false
+                };
+                transaction.update(roomRef, {
+                    players: arrayUnion(newPlayer),
+                    lastUpdated: Date.now()
+                });
+            }
+            
+            currentRoomId = roomId;
+            isHost = false;
+            gameMode = 'online';
         });
         
-        isHost = false;
-        listenToRoom(roomId);
+        startRoomListener(roomId);
         showScreen(lobbyScreen);
         
-    } catch (error) {
-        console.error("Error al unirse a la sala:", error);
-        showMessage("Error al unirse a la sala. Verifica el código.");
+    } catch (e) {
+        console.error("Error al unirse a la sala:", e);
+        showMessage(e.message || "No se pudo unir a la sala. Verifica el ID.");
     }
 }
 
-// Salir de la sala (Host o Invitado)
+function startRoomListener(roomId) {
+    if (roomUnsubscribe) roomUnsubscribe();
+    
+    roomUnsubscribe = onSnapshot(getRoomRef(roomId), (doc) => {
+        if (doc.exists()) {
+            const room = doc.data();
+            
+            // Actualizar el estado global
+            impostorCount = room.impostorCount;
+            currentPlayerIndex = room.currentPlayerIndex;
+            wordForPlayers = room.wordForPlayers;
+            wordForImpostor = room.wordForImpostor;
+            impostorIndices = room.impostorIndices;
+            currentRoundType = room.currentRoundType;
+            
+            renderLobby(room);
+            
+            // Si el juego está en curso, ir a la pantalla de la palabra
+            if (room.status === 'in_game') {
+                if (currentPlayerIndex < room.players.length) {
+                    gameMode = 'online';
+                    updateWordScreenUI(room.players.map(p => p.name));
+                    showScreen(wordScreen);
+                } else {
+                    // Juego finalizado/votación
+                    showScreen(endScreen);
+                }
+            } else if (room.status === 'finished') {
+                showScreen(endScreen);
+            }
+            
+        } else {
+            // La sala ha sido eliminada o ya no existe
+            if (currentRoomId === roomId) {
+                currentRoomId = null;
+                isHost = false;
+                gameMode = 'local';
+                showScreen(startScreen);
+                showMessage("La sala ha sido cerrada por el Host.");
+            }
+        }
+    }, (error) => {
+        console.error("Error en el listener de sala:", error);
+        showMessage("Error de conexión con la sala. Volviendo al inicio.");
+        leaveRoom();
+    });
+}
+
 async function leaveRoom() {
-    const { doc, updateDoc, deleteDoc, arrayRemove } = window.firebase;
+    if (!currentRoomId || !currentUserId) return;
     
     if (roomUnsubscribe) {
-        roomUnsubscribe(); // Deja de escuchar
+        roomUnsubscribe();
         roomUnsubscribe = null;
     }
     
-    if (currentRoomId) {
-        const roomRef = doc(db, roomsPath, currentRoomId);
+    const roomRef = getRoomRef(currentRoomId);
+    
+    try {
         if (isHost) {
-            // Si soy el host, borro la sala
-            await deleteDoc(roomRef).catch(e => console.error("Error al borrar sala:", e));
+            // Si eres el host, borra la sala
+            await deleteDoc(roomRef);
         } else {
-            // Si soy invitado, me quito de la lista
+            // Si eres un jugador, sal de la lista de players
             await updateDoc(roomRef, {
-                players: arrayRemove({ userId: userId, name: userName })
-            }).catch(e => console.error("Error al salir de la sala:", e));
+                players: arrayRemove({
+                    id: currentUserId,
+                    name: localPlayerName, // Usamos el nombre local para el arrayRemove
+                    isHost: false
+                }),
+                lastUpdated: Date.now()
+            });
         }
+    } catch (e) {
+        console.warn("Error al salir/borrar sala:", e);
+        // Continuar volviendo a la pantalla de inicio incluso si falla la limpieza
     }
     
     currentRoomId = null;
     isHost = false;
+    gameMode = 'local';
     showScreen(startScreen);
 }
 
-// Función del Host para actualizar la config en Firestore
-async function updateLobbyConfig() {
-    if (!isHost || !currentRoomId) return;
-    
-    const { doc, updateDoc } = window.firebase;
-    const roomRef = doc(db, roomsPath, currentRoomId);
+// --- RENDERIZADO DEL LOBBY ---
 
-    // Leer valores de los controles del lobby
-    const config = {
-        impostorCount: parseInt(lobbyImpostorCountDisplay.textContent),
-        category: lobbyCategorySelector.value,
-        specialRounds: lobbySpecialRoundsCheck.checked,
-        impostorKnows: lobbyImpostorKnowsCheck.checked
-    };
+function renderLobby(room) {
+    lobbyTitleEl.textContent = room.title;
+    onlineRoomIdDisplayEl.textContent = currentRoomId;
     
-    try {
-        await updateDoc(roomRef, { config: config });
-    } catch (e) {
-        console.error("Error al actualizar config:", e);
+    // Host Options
+    if (isHost) {
+        hostOptionsEl.classList.remove('hidden');
+        waitMessageEl.classList.add('hidden');
+        
+        // Sincronizar UI de Host con datos de la sala
+        impostorCountOnlineEl.textContent = room.impostorCount;
+        categorySelectorOnline.value = room.category;
+        
+        // Actualizar límites del host
+        impostorsMinusOnlineBtn.disabled = room.impostorCount <= 1;
+        impostorsPlusOnlineBtn.disabled = room.impostorCount >= room.players.length - 1 || room.players.length < 3;
+        startOnlineGameBtn.disabled = room.players.length < 3;
+        startOnlineGameBtn.textContent = room.players.length < 3 ? "Esperando jugadores (Mín. 3)" : "Iniciar Juego Online";
+
+    } else {
+        hostOptionsEl.classList.add('hidden');
+        waitMessageEl.classList.remove('hidden');
     }
+    
+    // Lista de Miembros (Común)
+    roomMembersListEl.innerHTML = '';
+    room.players.forEach(player => {
+        const div = document.createElement('div');
+        div.classList.add('room-member');
+        
+        const nameSpan = document.createElement('span');
+        nameSpan.classList.add('member-name');
+        nameSpan.textContent = player.name;
+        
+        const infoDiv = document.createElement('div');
+        if (player.isHost) {
+            const hostBadge = document.createElement('span');
+            hostBadge.classList.add('host-badge');
+            hostBadge.textContent = 'Host';
+            infoDiv.appendChild(hostBadge);
+        }
+        if (player.id === currentUserId) {
+            nameSpan.textContent += ' (Tú)';
+        }
+        
+        div.appendChild(nameSpan);
+        div.appendChild(infoDiv);
+        roomMembersListEl.appendChild(div);
+    });
 }
 
-// Función del Host para iniciar la partida
-async function handleOnlineStartGame() {
-    if (!isHost || !currentRoomId) return;
-    
-    const { doc, getDoc, updateDoc } = window.firebase;
-    const roomRef = doc(db, roomsPath, currentRoomId);
-    
-    try {
-        const docSnap = await getDoc(roomRef);
-        if (!docSnap.exists()) return;
-        
-        const roomData = docSnap.data();
-        
-        // Cargar variables locales con la config de la sala
-        playerNames = roomData.players.map(p => p.name);
-        playerCount = playerNames.length;
-        impostorCount = roomData.config.impostorCount;
-        selectedCategory = roomData.config.category;
-        enableSpecialRounds = roomData.config.specialRounds;
-        impostorKnows = roomData.config.impostorKnows;
+// --- LÓGICA DE JUEGO (COMPARTIDA) ---
 
-        if (playerCount < 3) {
-            showMessage("Necesitas al menos 3 jugadores para empezar.");
-            return;
-        }
-        if (impostorCount >= playerCount) {
-            showMessage("Debe haber menos impostores que jugadores.");
-            return;
-        }
+async function setupGame(playerList, category, impostorCount) {
+    impostorIndices = [];
+    wordForPlayers = "";
+    wordForImpostor = "";
+    currentRoundType = "normal";
+    currentPlayerIndex = 0;
+    
+    const playerCount = playerList.length;
+    const wordList = getWordList(category);
 
-        // Ejecutar la lógica local de setup
-        setupGame();
-        
-        // Crear el nuevo estado de juego para guardar en Firestore
-        const newGameState = {
-            status: 'playing',
+    // 1. Elegir palabras (siempre de la lista real, incluso en el modo random)
+    const playerWordIndex = Math.floor(Math.random() * wordList.length);
+    wordForPlayers = wordList[playerWordIndex];
+    
+    // El impostor siempre sabe que es impostor en modo online por simplicidad
+    wordForImpostor = "IMPOSTOR";
+
+    // 2. Elegir Impostores
+    const availablePlayerIndices = Array.from({length: playerCount}, (_, i) => i);
+    let count = impostorCount;
+    while (count > 0 && availablePlayerIndices.length > 0) {
+        const impostorIndex = availablePlayerIndices.splice(Math.floor(Math.random() * availablePlayerIndices.length), 1)[0];
+        impostorIndices.push(impostorIndex);
+        count--;
+    }
+    
+    // Si es online, actualizar Firestore. Si es local, las variables ya están actualizadas.
+    if (gameMode === 'online' && isHost) {
+        const roomRef = getRoomRef(currentRoomId);
+        await updateDoc(roomRef, {
+            status: 'in_game',
+            currentPlayerIndex: 0,
             wordForPlayers: wordForPlayers,
             wordForImpostor: wordForImpostor,
             impostorIndices: impostorIndices,
-            currentRoundType: currentRoundType,
-            // Nota: playerNames y playerCount se leen de la lista de players
-        };
-        
-        // Actualizar el documento
-        await updateDoc(roomRef, { gameState: newGameState });
-        
-        // El onSnapshot se encargará de mover al host y a los clientes a la pantalla de juego
-        
-    } catch (error) {
-        console.error("Error al iniciar la partida online:", error);
-    }
-}
-
-// Función del Host para volver al lobby
-async function handleBackToLobby() {
-    if (!isHost || !currentRoomId) return;
-
-    const { doc, updateDoc } = window.firebase;
-    const roomRef = doc(db, roomsPath, currentRoomId);
-    
-    try {
-        await updateDoc(roomRef, {
-            'gameState.status': 'lobby'
+            currentRoundType: 'normal', // Las rondas especiales se ignoran en modo online por simplicidad
+            lastUpdated: Date.now()
         });
-        // El onSnapshot moverá a todos al lobby
-    } catch (e) {
-        console.error("Error al volver al lobby:", e);
     }
 }
 
 
-// --- LÓGICA DE JUEGO (LOCAL) ---
-// Esta lógica ahora es usada por el juego local,
-// Y también por el HOST del juego online para preparar la ronda.
+// --- LÓGICA DE JUEGO LOCAL ---
 
-function setupGame() {
+function setupGameLocal() {
     currentPlayerIndex = 0;
     impostorIndices = [];
     wordForPlayers = "";
@@ -1306,16 +1153,10 @@ function setupGame() {
     stopAlarm();
     
     // 1. Elegir la lista de palabras
-    let wordList;
-    if (selectedCategory === 'random') {
-        const allLists = Object.values(allWordLists);
-        wordList = allLists[Math.floor(Math.random() * allLists.length)];
-    } else {
-        wordList = allWordLists[selectedCategory];
-    }
+    let wordList = getWordList(selectedCategoryLocal);
 
-    // 2. Verificar Rondas Especiales
-    if (enableSpecialRounds && Math.random() < 0.25) {
+    // 2. Verificar Rondas Especiales (solo Local)
+    if (enableSpecialRoundsLocal && Math.random() < 0.25) {
         const specialType = Math.floor(Math.random() * 4);
         
         switch (specialType) {
@@ -1350,7 +1191,7 @@ function setupGame() {
         const playerWordIndex = Math.floor(Math.random() * wordList.length);
         wordForPlayers = wordList[playerWordIndex];
 
-        if (!impostorKnows) {
+        if (!impostorKnowsLocal) {
             let impostorWordIndex = Math.floor(Math.random() * wordList.length);
             while (impostorWordIndex === playerWordIndex) {
                 impostorWordIndex = Math.floor(Math.random() * wordList.length);
@@ -1361,7 +1202,7 @@ function setupGame() {
         }
 
         const availablePlayerIndices = Array.from({length: playerCount}, (_, i) => i);
-        let count = impostorCount; // Usar la variable global
+        let count = impostorCount;
         while (count > 0 && availablePlayerIndices.length > 0) {
             const impostorIndex = availablePlayerIndices.splice(Math.floor(Math.random() * availablePlayerIndices.length), 1)[0];
             impostorIndices.push(impostorIndex);
@@ -1370,10 +1211,107 @@ function setupGame() {
     }
 }
 
-// --- FUNCIONES DE UI (LOCAL) ---
+// --- ACTUALIZACIÓN DE UI EN JUEGO (COMPARTIDA) ---
+
+function getPlayerNames() {
+    if (gameMode === 'local') {
+        return playerNames;
+    } else if (currentRoomId) {
+        // En modo online, la lista de jugadores viene del snapshot de la sala
+        if (roomUnsubscribe && roomUnsubscribe.doc && roomUnsubscribe.doc.data().players) {
+            return roomUnsubscribe.doc.data().players.map(p => p.name);
+        }
+        return [];
+    }
+    return playerNames; // Fallback
+}
+
+
+function updateWordScreenUI() {
+    const names = getPlayerNames();
+    const currentPlayerName = names[currentPlayerIndex] || `Jugador ${currentPlayerIndex + 1}`;
+    
+    playerNameDisplayEl.textContent = `Es el turno de ${currentPlayerName}`;
+    wordDisplayEl.textContent = "";
+    wordDisplayEl.classList.add('hidden');
+    showWordBtn.classList.remove('hidden');
+
+    if (currentPlayerIndex === names.length - 1) {
+        nextPlayerBtn.textContent = "Finalizar Ronda";
+    } else {
+        nextPlayerBtn.textContent = "Siguiente Jugador";
+    }
+}
+
+// --- EVENT LISTENERS ---
+
+// Eventos de Navegación
+startGameBtn.addEventListener('click', () => {
+    gameMode = 'local';
+    showScreen(configScreenLocal);
+    renderPlayerNameInputs();
+});
+onlineGameBtn.addEventListener('click', () => {
+    if (isFirebaseConnected) {
+        showScreen(onlineScreen);
+    } else {
+        showMessage("El modo online no está disponible. Revisa la conexión.");
+    }
+});
+backToStartBtnLocal.addEventListener('click', () => showScreen(startScreen));
+backToStartBtnOnline.addEventListener('click', () => showScreen(startScreen));
+
+// Eventos Online (Sala)
+createRoomBtn.addEventListener('click', () => {
+    const roomName = roomNameInput.value.trim();
+    createRoom(roomName);
+});
+
+joinRoomBtn.addEventListener('click', () => {
+    const roomId = joinRoomIdInput.value.trim().toUpperCase();
+    if (roomId.length !== 6) {
+        return showMessage("El ID de sala debe tener 6 caracteres.");
+    }
+    joinRoom(roomId);
+});
+
+leaveRoomBtn.addEventListener('click', leaveRoom);
+
+// Eventos Online (Host Options)
+impostorsMinusOnlineBtn.addEventListener('click', async () => {
+    if (!isHost || !currentRoomId || impostorCount <= 1) return;
+    try {
+        await updateDoc(getRoomRef(currentRoomId), { impostorCount: impostorCount - 1 });
+    } catch (e) { console.error("Error al actualizar impostores:", e); }
+});
+impostorsPlusOnlineBtn.addEventListener('click', async () => {
+    const names = getPlayerNames();
+    if (!isHost || !currentRoomId || impostorCount >= names.length - 1) return;
+    try {
+        await updateDoc(getRoomRef(currentRoomId), { impostorCount: impostorCount + 1 });
+    } catch (e) { console.error("Error al actualizar impostores:", e); }
+});
+categorySelectorOnline.addEventListener('change', async (e) => {
+    if (!isHost || !currentRoomId) return;
+    try {
+        await updateDoc(getRoomRef(currentRoomId), { category: e.target.value });
+    } catch (e) { console.error("Error al actualizar categoría:", e); }
+});
+startOnlineGameBtn.addEventListener('click', async () => {
+    if (!isHost || !currentRoomId) return;
+    const roomData = roomUnsubscribe.doc.data();
+    if (roomData.players.length < 3) {
+        return showMessage("Necesitas al menos 3 jugadores para iniciar.");
+    }
+    const names = roomData.players.map(p => p.name);
+    await setupGame(names, roomData.category, roomData.impostorCount);
+});
+
+
+// Eventos de Config Local (Reutilizados del código anterior)
 function renderPlayerNameInputs() {
+    // ... (Mantener la lógica de renderPlayerNameInputs igual que antes)
     playerNamesContainer.innerHTML = '';
-    // Asegura que playerNames tenga el tamaño correcto
     while (playerNames.length < playerCount) {
         playerNames.push(`Jugador ${playerNames.length + 1}`);
     }
@@ -1382,7 +1320,7 @@ function renderPlayerNameInputs() {
     for (let i = 0; i < playerCount; i++) {
         const input = document.createElement('input');
         input.type = 'text';
-        input.classList.add('input-field'); // Reusar estilo
+        input.classList.add('input-field');
         input.placeholder = `Jugador ${i + 1}`;
         input.value = playerNames[i];
         input.dataset.index = i;
@@ -1392,10 +1330,10 @@ function renderPlayerNameInputs() {
         playerNamesContainer.appendChild(input);
     }
     playerCountEl.textContent = playerCount;
-    updateImpostorLimits();
+    updateImpostorLimitsLocal();
 }
 
-function updateImpostorLimits() {
+function updateImpostorLimitsLocal() {
     if (impostorCount >= playerCount) {
         impostorCount = playerCount - 1;
     }
@@ -1405,210 +1343,107 @@ function updateImpostorLimits() {
     impostorCountEl.textContent = impostorCount;
 }
 
-function updateWordScreenUI() {
-    playerNameDisplayEl.textContent = playerNames[currentPlayerIndex];
-    wordDisplayEl.textContent = "";
-    wordDisplayEl.classList.add('hidden');
-    showWordBtn.classList.remove('hidden');
-
-    if (currentPlayerIndex === playerCount - 1) {
-        nextPlayerBtn.textContent = "Finalizar Ronda";
-    } else {
-        nextPlayerBtn.textContent = "Siguiente Jugador";
-    }
-}
-
-// --- EVENT LISTENERS (Menús Iniciales) ---
-startGameBtn.addEventListener('click', () => {
-    showScreen(configScreen);
-    renderPlayerNameInputs();
-});
-
-// NUEVO: Comprobación de estado de Firebase antes de ir al menú online
-onlineGameBtn.addEventListener('click', () => {
-    if (!isFirebaseReady) {
-        showMessage("Aún estamos estableciendo la conexión con el servidor. Por favor, espera un momento y vuelve a intentarlo.");
-        return;
-    }
-    showScreen(onlineMenuScreen);
-});
-
-backToStartBtn.addEventListener('click', () => showScreen(startScreen));
-backToStartBtnLocal.addEventListener('click', () => showScreen(startScreen));
-
-
-// --- EVENT LISTENERS (Online) ---
-createRoomBtn.addEventListener('click', handleCreateRoom);
-joinRoomMenuBtn.addEventListener('click', () => showScreen(joinRoomScreen));
-backToOnlineMenuBtn.addEventListener('click', () => showScreen(onlineMenuScreen));
-submitJoinBtn.addEventListener('click', handleJoinRoom);
-lobbyLeaveBtn.addEventListener('click', leaveRoom);
-lobbyStartGameBtn.addEventListener('click', handleOnlineStartGame);
-
-// Listeners para controles del host en lobby
-lobbyImpostorsMinus.addEventListener('click', () => {
-    let count = parseInt(lobbyImpostorCountDisplay.textContent);
-    if (count > 1) {
-        lobbyImpostorCountDisplay.textContent = count - 1;
-        updateLobbyConfig();
-    }
-});
-lobbyImpostorsPlus.addEventListener('click', () => {
-    let count = parseInt(lobbyImpostorCountDisplay.textContent);
-    // Límite (ej. 10)
-    if (count < 10) { 
-        lobbyImpostorCountDisplay.textContent = count + 1;
-        updateLobbyConfig();
-    }
-});
-lobbyCategorySelector.addEventListener('change', updateLobbyConfig);
-lobbySpecialRoundsCheck.addEventListener('change', updateLobbyConfig);
-lobbyImpostorKnowsCheck.addEventListener('change', updateLobbyConfig);
-
-
-// --- EVENT LISTENERS (Config Local) ---
-toggleNamesBtn.addEventListener('click', () => {
+document.getElementById('toggle-names-btn').addEventListener('click', () => {
     playerNamesContainer.classList.toggle('hidden');
     const isHidden = playerNamesContainer.classList.contains('hidden');
-    toggleNamesBtn.textContent = isHidden ? "Cambiar nombres de jugadores" : "Ocultar nombres";
+    document.getElementById('toggle-names-btn').textContent = isHidden ? "Cambiar nombres de jugadores" : "Ocultar nombres";
 });
-playersMinusBtn.addEventListener('click', () => {
-    if (playerCount > 3) {
-        playerCount--;
-        renderPlayerNameInputs();
-    } else {
-        showMessage("La cantidad mínima de jugadores es 3.");
-    }
+document.getElementById('players-minus').addEventListener('click', () => {
+    if (playerCount > 3) { playerCount--; renderPlayerNameInputs(); } else { showMessage("La cantidad mínima de jugadores es 3."); }
 });
-playersPlusBtn.addEventListener('click', () => {
-    if (playerCount < 34) {
-        playerCount++;
-        renderPlayerNameInputs();
-    } else {
-        showMessage("Límite de 34 jugadores alcanzado.");
-    }
+document.getElementById('players-plus').addEventListener('click', () => {
+    if (playerCount < 34) { playerCount++; renderPlayerNameInputs(); } else { showMessage("Límite de 34 jugadores alcanzado."); }
 });
-impostorsMinusBtn.addEventListener('click', () => {
-    if (impostorCount > 1) {
-        impostorCount--;
-        impostorCountEl.textContent = impostorCount;
-    } else {
-        showMessage("La cantidad mínima de impostores es 1.");
-    }
-    updateImpostorLimits();
+document.getElementById('impostors-minus').addEventListener('click', () => {
+    if (impostorCount > 1) { impostorCount--; updateImpostorLimitsLocal(); } else { showMessage("La cantidad mínima de impostores es 1."); }
 });
-impostorsPlusBtn.addEventListener('click', () => {
-    if (impostorCount < playerCount - 1) {
-        impostorCount++;
-        impostorCountEl.textContent = impostorCount;
-    } else {
-        showMessage(`No puede haber ${playerCount} o más impostores si solo hay ${playerCount} jugadores.`);
-    }
-    updateImpostorLimits();
+document.getElementById('impostors-plus').addEventListener('click', () => {
+    if (impostorCount < playerCount - 1) { impostorCount++; updateImpostorLimitsLocal(); } else { showMessage(`No puede haber ${playerCount} o más impostores.`); }
 });
 
-// Botón Iniciar Partida (Local)
-startRoundBtn.addEventListener('click', () => {
+startRoundBtnLocal.addEventListener('click', () => {
     // Leer config local
     impostorCount = parseInt(impostorCountEl.textContent);
-    selectedCategory = categorySelector.value;
-    enableSpecialRounds = specialRoundsCheck.checked;
-    impostorKnows = impostorKnowsCheck.checked;
+    selectedCategoryLocal = categorySelectorLocal.value;
+    enableSpecialRoundsLocal = specialRoundsCheckLocal.checked;
+    impostorKnowsLocal = impostorKnowsCheckLocal.checked;
     
-    // Validaciones locales
     if (playerCount <= impostorCount) {
-        showMessage("La cantidad de jugadores debe ser mayor que la de impostores.");
-        return;
+        return showMessage("La cantidad de jugadores debe ser mayor que la de impostores.");
     }
     document.querySelectorAll('#player-names-container .input-field').forEach((input, index) => {
         playerNames[index] = input.value.trim() || `Jugador ${index + 1}`;
     });
 
-    setupGame(); // Prepara el juego local
+    gameMode = 'local';
+    setupGameLocal();
     updateWordScreenUI();
     showScreen(wordScreen);
 });
 
 
-// --- EVENT LISTENERS (Juego) ---
+// Eventos de Juego (Compartidos)
 showWordBtn.addEventListener('click', () => {
     const isImpostor = impostorIndices.includes(currentPlayerIndex);
-    
     wordDisplayEl.classList.remove('impostor-text');
     stopAlarm();
 
+    // Lógica para mostrar la palabra
+    let wordToShow = "";
     if (currentRoundType === "Todos con palabra distinta") {
-        let wordList;
-        if (selectedCategory === 'random') {
-            const allLists = Object.values(allWordLists);
-            wordList = allLists[Math.floor(Math.random() * allLists.length)];
-        } else {
-            wordList = allWordLists[selectedCategory];
-        }
-        wordDisplayEl.textContent = wordList[Math.floor(Math.random() * wordList.length)];
-    
+        let wordList = getWordList(gameMode === 'local' ? selectedCategoryLocal : categorySelectorOnline.value);
+        wordToShow = wordList[Math.floor(Math.random() * wordList.length)];
     } else if (isImpostor) {
-        wordDisplayEl.textContent = wordForImpostor;
+        wordToShow = wordForImpostor;
         wordDisplayEl.classList.add('impostor-text');
-        
-        if (enableSpecialRounds) {
-            document.body.classList.add('impostor-alarm');
-            alarmSound.play().catch(e => console.warn("La reproducción de audio fue bloqueada."));
-        }
-        
+        // Simulación de alarma visual
+        document.body.classList.add('impostor-alarm');
     } else {
-        wordDisplayEl.textContent = wordForPlayers;
+        wordToShow = wordForPlayers;
     }
 
+    wordDisplayEl.textContent = wordToShow;
     wordDisplayEl.classList.remove('hidden');
     showWordBtn.classList.add('hidden');
 });
 
-// Botón Siguiente Jugador
-nextPlayerBtn.addEventListener('click', () => {
+nextPlayerBtn.addEventListener('click', async () => {
     stopAlarm();
+    const names = getPlayerNames();
     
-    if (currentPlayerIndex < playerCount - 1) {
+    if (currentPlayerIndex < names.length - 1) {
         currentPlayerIndex++;
+        
+        if (gameMode === 'online' && isHost) {
+            await updateDoc(getRoomRef(currentRoomId), { currentPlayerIndex: currentPlayerIndex, lastUpdated: Date.now() });
+        }
         updateWordScreenUI();
     } else {
-        // Modificar botones de pantalla final según el modo (local/online)
-        if (currentRoomId) {
-            // Modo Online
-            playAgainBtn.textContent = "Jugar de Nuevo";
-            changeSettingsBtn.textContent = "Volver al Lobby";
-            playAgainBtn.style.display = isHost ? 'flex' : 'none'; // Solo host puede reiniciar
-        } else {
-            // Modo Local
-            playAgainBtn.textContent = "Jugar de Nuevo";
-            changeSettingsBtn.textContent = "Cambiar Ajustes";
-            playAgainBtn.style.display = 'flex';
+        // Fin de la ronda
+        if (gameMode === 'online' && isHost) {
+            await updateDoc(getRoomRef(currentRoomId), { status: 'finished', lastUpdated: Date.now() });
         }
         
+        // La UI se actualiza con los datos finales de la ronda
         endMessageInitialEl.classList.remove('hidden');
         impostorRevealBtn.classList.remove('hidden');
         revealArea.classList.add('hidden');
-        specialRoundInfoEl.classList.add('hidden');
         showScreen(endScreen);
     }
 });
 
-// --- EVENT LISTENERS (Pantalla Final) ---
+// Pantalla Final
 impostorRevealBtn.addEventListener('click', () => {
     stopAlarm();
     impostorRevealBtn.classList.add('hidden');
     endMessageInitialEl.classList.add('hidden');
     revealArea.classList.remove('hidden');
     impostorListEl.innerHTML = '';
+    
+    const names = getPlayerNames();
 
     if (currentRoundType !== "normal") {
-        let specialText = `¡Ronda Especial: ${currentRoundType}!`;
-        if (currentRoundType === "Nadie es Impostor") {
-            specialText += " Todos tenían la palabra.";
-        } else if (currentRoundType === "Todos con palabra distinta") {
-            specialText += " Cada uno vio algo diferente.";
-        }
-        specialRoundInfoEl.textContent = specialText;
+        specialRoundInfoEl.textContent = `¡Ronda Especial: ${currentRoundType}!`;
         specialRoundInfoEl.classList.remove('hidden');
     } else {
         specialRoundInfoEl.classList.add('hidden');
@@ -1617,66 +1452,65 @@ impostorRevealBtn.addEventListener('click', () => {
     if (impostorIndices.length > 0) {
         endMessageFinal.textContent = "Los impostores eran:";
         impostorIndices.forEach(index => {
-            if (playerNames[index]) {
-                const li = document.createElement('li');
-                li.textContent = playerNames[index];
-                impostorListEl.appendChild(li);
-            }
+            const li = document.createElement('li');
+            li.textContent = names[index] || `Jugador ${index + 1}`;
+            impostorListEl.appendChild(li);
         });
     } else {
-        endMessageFinal.textContent = "¡No había impostores esta ronda!";
+        endMessageFinal.textContent = "¡Nadie fue el impostor esta ronda!";
     }
 });
 
-// Botón Jugar de Nuevo (Ahora maneja local y online)
 playAgainBtn.addEventListener('click', () => {
-    stopAlarm();
-    if (currentRoomId && isHost) {
-        // Online: Host inicia otra ronda
-        handleOnlineStartGame();
-    } else if (!currentRoomId) {
-        // Local: Inicia otra ronda
-        setupGame();
+    if (gameMode === 'local') {
+        setupGameLocal();
         updateWordScreenUI();
         showScreen(wordScreen);
+    } else if (gameMode === 'online' && isHost) {
+        // En online, el host vuelve al lobby para reconfigurar o iniciar de nuevo.
+        updateDoc(getRoomRef(currentRoomId), { status: 'lobby', currentPlayerIndex: 0, lastUpdated: Date.now() });
+        showScreen(lobbyScreen);
+    } else {
+        // Jugador normal vuelve al lobby
+        showScreen(lobbyScreen);
     }
 });
 
-// Botón Cambiar Ajustes (Ahora maneja local y online)
 changeSettingsBtn.addEventListener('click', () => {
-    stopAlarm();
-    if (currentRoomId && isHost) {
-        // Online: Host vuelve al lobby
-        handleBackToLobby();
-    } else if (currentRoomId && !isHost) {
-        // Online: Invitado sale de la sala
-        leaveRoom();
-    } else if (!currentRoomId) {
-        // Local: Vuelve a config local
+    if (gameMode === 'local') {
         renderPlayerNameInputs();
-        showScreen(configScreen);
+        showScreen(configScreenLocal);
+    } else if (gameMode === 'online') {
+        if (isHost) {
+            // Host puede cambiar la configuración del juego en el lobby
+            updateDoc(getRoomRef(currentRoomId), { status: 'lobby', currentPlayerIndex: 0, lastUpdated: Date.now() });
+        }
+        showScreen(lobbyScreen);
     }
 });
 
 
 // --- INICIALIZACIÓN ---
-document.addEventListener('DOMContentLoaded', async () => {
-    // El botón online se deshabilita en el HTML/CSS y se habilita aquí
-    // El texto también se actualiza al finalizar la conexión
+document.addEventListener('DOMContentLoaded', () => {
+    // Llenar selector de categorías para online y local
+    const fillCategorySelector = (selector) => {
+        selector.innerHTML = '';
+        Object.entries(categoryNames).forEach(([key, value]) => {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = value;
+            selector.appendChild(option);
+        });
+    };
+    fillCategorySelector(categorySelectorLocal);
+    fillCategorySelector(categorySelectorOnline);
     
-    try {
-        await initFirebase(); // Esperar a que Firebase esté listo (con reintentos y timeout)
-    } catch (e) {
-        // initFirebase ya actualiza la UI si falla, este catch es solo un respaldo.
-        console.error("Fallo la inicialización de Firebase", e);
-    }
+    // Asignar el nombre local al azar
+    localPlayerName = prompt("Ingresa tu nombre para el modo Online:") || localPlayerName;
     
-    // Cargar estado inicial de checkboxes locales
-    enableSpecialRounds = specialRoundsCheck.checked;
-    impostorKnows = impostorKnowsCheck.checked;
-
+    // Iniciar Firebase y el listener de Auth
+    initFirebase();
     showScreen(startScreen);
-    renderPlayerNameInputs(); // Inicializa los inputs de nombre local
 });
 
 </script>
