@@ -1,742 +1,815 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Impostor Fútbol</title>
-    <!-- Incluye las fuentes y \u00edconos necesarios -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Bebas+Neue&family=Inter:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    
-    <!-- Se elimin\u00f3 el script de Tone.js y toda la l\u00f3gica de sonido -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Impostor Fútbol</title>
+<!-- Incluye las fuentes y íconos necesarios -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Bebas+Neue&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<!-- Se eliminó el script de Tone.js y toda la lógica de sonido -->
 
-    <style>
-        :root {
-            --color-primary: #004d98; /* Azul profundo como la camiseta */
-            --color-secondary: #00bfff; /* Celeste */
-            --color-accent: #fcd116; /* Dorado */
-            --color-text-dark: #222;
-            --color-text-light: #fff;
-            --color-bg: #e0f7fa;
-            --font-main: 'Bebas Neue', 'Inter', sans-serif;
-            --font-secondary: 'Inter', 'Roboto', sans-serif;
-        }
+<style>
+:root {
+--color-primary: #004d98; /* Azul profundo como la camiseta */
+--color-secondary: #00bfff; /* Celeste */
+--color-accent: #fcd116; /* Dorado */
+--color-text-dark: #222;
+--color-text-light: #fff;
+--color-bg: #e0f7fa;
+--font-main: 'Bebas Neue', 'Inter', sans-serif;
+--font-secondary: 'Inter', 'Roboto', sans-serif;
+}
 
-        body {
-            font-family: var(--font-secondary);
-            background: linear-gradient(135deg, var(--color-bg), #b3e5fc);
-            color: var(--color-text-dark);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.1"><path d="M50 0 L100 25 L100 75 L50 100 L0 75 L0 25 Z" fill="%23004d98"/><circle cx="50" cy="50" r="40" fill="%23fcd116" stroke="%2300bfff" stroke-width="5" fill-opacity="0.2"/></svg>');
-            background-size: 50px;
-            background-repeat: repeat;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
+body {
+font-family: var(--font-secondary);
+background: linear-gradient(135deg, var(--color-bg), #b3e5fc);
+color: var(--color-text-dark);
+display: flex;
+justify-content: center;
+align-items: center;
+min-height: 100vh;
+margin: 0;
+padding: 20px;
+box-sizing: border-box;
+background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.1"><path d="M50 0 L100 25 L100 75 L50 100 L0 75 L0 25 Z" fill="%23004d98"/><circle cx="50" cy="50" r="40" fill="%23fcd116" stroke="%2300bfff" stroke-width="5" fill-opacity="0.2"/></svg>');
+background-size: 50px;
+background-repeat: repeat;
+-webkit-font-smoothing: antialiased;
+-moz-osx-font-smoothing: grayscale;
+}
 
-        .container {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            text-align: center;
-            max-width: 500px;
-            width: 100%;
-            border: 5px solid var(--color-primary);
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.3s ease-out;
-        }
+.container {
+background: rgba(255, 255, 255, 0.95);
+padding: 30px;
+border-radius: 20px;
+box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+text-align: center;
+max-width: 500px;
+width: 100%;
+border: 5px solid var(--color-primary);
+position: relative;
+overflow: hidden;
+transition: transform 0.3s ease-out;
+}
 
-        h1 {
-            font-family: var(--font-main);
-            font-size: clamp(2rem, 8vw, 4rem);
-            color: var(--color-primary);
-            text-shadow: 3px 3px 0 var(--color-secondary), 6px 6px 0 var(--color-accent);
-            letter-spacing: 2px;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-        }
+h1 {
+font-family: var(--font-main);
+font-size: clamp(2rem, 8vw, 4rem);
+color: var(--color-primary);
+text-shadow: 3px 3px 0 var(--color-secondary), 6px 6px 0 var(--color-accent);
+letter-spacing: 2px;
+margin-bottom: 20px;
+text-transform: uppercase;
+}
 
-        h2 {
-            font-family: var(--font-main);
-            font-size: clamp(1.5rem, 6vw, 3rem);
-            color: var(--color-text-dark);
-            margin-bottom: 20px;
-        }
+h2 {
+font-family: var(--font-main);
+font-size: clamp(1.5rem, 6vw, 3rem);
+color: var(--color-text-dark);
+margin-bottom: 20px;
+}
 
-        .screen {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 20px;
-            padding: 10px;
-            border: 2px solid var(--color-primary);
-            border-radius: 15px;
-            background: #fff;
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
-            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
-            opacity: 0;
-            transform: translateY(20px);
-            max-height: 80vh;
-            overflow-y: auto;
-        }
+.screen {
+display: none;
+flex-direction: column;
+align-items: center;
+justify-content: flex-start;
+gap: 20px;
+padding: 10px;
+border: 2px solid var(--color-primary);
+border-radius: 15px;
+background: #fff;
+box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
+transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+opacity: 0;
+transform: translateY(20px);
+max-height: 80vh;
+overflow-y: auto;
+}
 
-        .screen.active {
-            display: flex;
-            opacity: 1;
-            transform: translateY(0);
-        }
+.screen.active {
+display: flex;
+opacity: 1;
+transform: translateY(0);
+}
 
-        .btn {
-            font-family: var(--font-main);
-            font-size: clamp(1.2rem, 5vw, 2rem);
-            padding: 15px 30px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            max-width: 300px;
-            color: var(--color-text-light);
-            background: var(--color-primary);
-            background-image: linear-gradient(to right, var(--color-primary) 0%, #0060c0 100%);
-            border: 2px solid var(--color-text-light);
-        }
+.btn {
+font-family: var(--font-main);
+font-size: clamp(1.2rem, 5vw, 2rem);
+padding: 15px 30px;
+border: none;
+border-radius: 10px;
+cursor: pointer;
+text-transform: uppercase;
+letter-spacing: 1px;
+transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+width: 100%;
+max-width: 300px;
+color: var(--color-text-light);
+background: var(--color-primary);
+background-image: linear-gradient(to right, var(--color-primary) 0%, #0060c0 100%);
+border: 2px solid var(--color-text-light);
+}
 
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-            background-image: linear-gradient(to right, #0060c0 0%, var(--color-primary) 100%);
-        }
+.btn:hover {
+transform: translateY(-3px);
+box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+background-image: linear-gradient(to right, #0060c0 0%, var(--color-primary) 100%);
+}
 
-        .btn.secondary {
-            background: var(--color-secondary);
-            background-image: linear-gradient(to right, var(--color-secondary) 0%, #33c8ff 100%);
-            margin-top: 10px;
-            border: 2px solid var(--color-primary);
-        }
-        
-        .small-btn {
-            font-size: 1rem;
-            max-width: 250px;
-            padding: 10px 20px;
-            margin: 15px auto 0 auto;
-        }
+.btn.secondary {
+background: var(--color-secondary);
+background-image: linear-gradient(to right, var(--color-secondary) 0%, #33c8ff 100%);
+margin-top: 10px;
+border: 2px solid var(--color-primary);
+}
+.small-btn {
+font-size: 1rem;
+max-width: 250px;
+padding: 10px 20px;
+margin: 15px auto 0 auto;
+}
 
-        .option-group {
-            width: 100%;
-            padding: 15px 0;
-            border-bottom: 1px dashed #ccc;
-        }
+.option-group {
+width: 100%;
+padding: 15px 0;
+border-bottom: 1px dashed #ccc;
+}
 
-        .count-controls {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 10px;
-        }
+.count-controls {
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 15px;
+margin-bottom: 10px;
+}
 
-        .option-label {
-            font-family: var(--font-secondary);
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--color-text-dark);
-            width: 150px;
-        }
+.option-label {
+font-family: var(--font-secondary);
+font-size: 1.2rem;
+font-weight: 700;
+color: var(--color-text-dark);
+width: 150px;
+}
 
-        .option-value {
-            font-family: var(--font-main);
-            font-size: 2.5rem;
-            color: var(--color-primary);
-        }
+.option-value {
+font-family: var(--font-main);
+font-size: 2.5rem;
+color: var(--color-primary);
+}
 
-        .arrow-btn {
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            color: var(--color-primary);
-            font-size: 2rem;
-            transition: transform 0.2s, color 0.2s;
-        }
+.arrow-btn {
+background: transparent;
+border: none;
+cursor: pointer;
+color: var(--color-primary);
+font-size: 2rem;
+transition: transform 0.2s, color 0.2s;
+}
 
-        .arrow-btn:hover {
-            transform: scale(1.2);
-            color: var(--color-accent);
-        }
+.arrow-btn:hover {
+transform: scale(1.2);
+color: var(--color-accent);
+}
 
-        /* Estilos para nombres de jugadores */
-        #player-names-container {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 10px;
-            /* Se oculta por defecto */
-        }
+/* Estilos para nombres de jugadores */
+#player-names-container {
+width: 100%;
+display: flex;
+flex-direction: column;
+gap: 10px;
+margin-top: 10px;
+/* Se oculta por defecto */
+}
 
-        .player-name-input {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid var(--color-secondary);
-            border-radius: 8px;
-            font-size: 1rem;
-            text-align: center;
-            transition: border-color 0.2s;
-        }
+.player-name-input {
+width: 100%;
+padding: 10px;
+border: 2px solid var(--color-secondary);
+border-radius: 8px;
+font-size: 1rem;
+text-align: center;
+transition: border-color 0.2s;
+}
 
-        .player-name-input:focus {
-            outline: none;
-            border-color: var(--color-primary);
-        }
-        
-        /* Estilos para el selector de categor\u00eda */
-        #category-selector {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid var(--color-primary);
-            border-radius: 8px;
-            font-size: 1.1rem;
-            background-color: #f8f8f8;
-            font-family: var(--font-secondary);
-            cursor: pointer;
-        }
+.player-name-input:focus {
+outline: none;
+border-color: var(--color-primary);
+}
+/* Estilos para el selector de categoría */
+#category-selector {
+width: 100%;
+padding: 10px;
+border: 2px solid var(--color-primary);
+border-radius: 8px;
+font-size: 1.1rem;
+background-color: #f8f8f8;
+font-family: var(--font-secondary);
+cursor: pointer;
+}
 
-        /* Pantalla de juego */
-        .game-display {
-            background-color: #f0f0f0;
-            border: 4px solid var(--color-primary);
-            border-radius: 15px;
-            padding: 40px 20px;
-            min-height: 200px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            box-sizing: border-box;
-            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        
-        #player-name-display {
-            font-family: var(--font-main);
-            font-size: clamp(2rem, 8vw, 4rem);
-            color: var(--color-primary);
-            animation: fadeIn 0.5s ease-out;
-            /* Se muestra solo el nombre */
-        }
+/* Pantalla de juego */
+.game-display {
+background-color: #f0f0f0;
+border: 4px solid var(--color-primary);
+border-radius: 15px;
+padding: 40px 20px;
+min-height: 200px;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+width: 100%;
+box-sizing: border-box;
+box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+}
+#player-name-display {
+font-family: var(--font-main);
+font-size: clamp(2rem, 8vw, 4rem);
+color: var(--color-primary);
+animation: fadeIn 0.5s ease-out;
+/* Se muestra solo el nombre */
+}
 
-        #word-display {
-            font-family: var(--font-main);
-            font-size: clamp(1.8rem, 7vw, 3.5rem);
-            color: var(--color-text-dark);
-            text-shadow: 1px 1px 0 rgba(0,0,0,0.1);
-            text-transform: uppercase;
-            text-align: center;
-            animation: zoomIn 0.3s ease-out;
-        }
+#word-display {
+font-family: var(--font-main);
+font-size: clamp(1.8rem, 7vw, 3.5rem);
+color: var(--color-text-dark);
+text-shadow: 1px 1px 0 rgba(0,0,0,0.1);
+text-transform: uppercase;
+text-align: center;
+animation: zoomIn 0.3s ease-out;
+}
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes zoomIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes zoomIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
 
-        .hidden { display: none; }
+.hidden { display: none; }
 
-        .impostor-text {
-            color: var(--color-accent);
-            animation: pulse 1.5s infinite;
-        }
+.impostor-text {
+color: var(--color-accent);
+animation: pulse 1.5s infinite;
+}
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        
-        /* Modal */
-        .modal {
-            display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%;
-            overflow: auto; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center;
-        }
-        .modal-content {
-            background-color: #fefefe; padding: 20px; border-radius: 10px; text-align: center;
-            max-width: 400px; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.2); animation: slideIn 0.3s ease-out;
-        }
-        
-        @keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes pulse {
+0% { transform: scale(1); }
+50% { transform: scale(1.05); }
+100% { transform: scale(1); }
+}
+/* Modal */
+.modal {
+display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%;
+overflow: auto; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center;
+}
+.modal-content {
+background-color: #fefefe; padding: 20px; border-radius: 10px; text-align: center;
+max-width: 400px; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.2); animation: slideIn 0.3s ease-out;
+}
+@keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        /* Estilos de la pantalla final */
-        #impostor-reveal-btn {
-            margin-top: 15px;
-            background-color: #d9534f;
-            background-image: linear-gradient(to right, #d9534f 0%, #c9302c 100%);
-        }
+/* Estilos de la pantalla final */
+#impostor-reveal-btn {
+margin-top: 15px;
+background-color: #d9534f;
+background-image: linear-gradient(to right, #d9534f 0%, #c9302c 100%);
+}
 
-        #impostor-list {
-            list-style: none;
-            padding: 0;
-            font-family: var(--font-secondary);
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: #c9302c; /* Rojo para los impostores */
-            margin-top: 10px;
-        }
-        
-        #end-message-final {
-            font-size: 1.2rem;
-            color: var(--color-text-dark);
-        }
-    </style>
+#impostor-list {
+list-style: none;
+padding: 0;
+font-family: var(--font-secondary);
+font-size: 1.4rem;
+font-weight: bold;
+color: #c9302c; /* Rojo para los impostores */
+margin-top: 10px;
+}
+#end-message-final {
+font-size: 1.2rem;
+color: var(--color-text-dark);
+}
+</style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- Pantalla de inicio -->
-        <div id="start-screen" class="screen active">
-            <h1>Impostor Fútbol</h1>
-            <p>Descubre el impostor entre tus amigos. ¡Que comience el partido!</p>
-            <button id="start-game-btn" class="btn">Iniciar Partida</button>
-        </div>
+<div class="container">
+<!-- Pantalla de inicio -->
+<div id="start-screen" class="screen active">
+<h1>Impostor Fútbol</h1>
+<p>Descubre el impostor entre tus amigos. ¡Que comience el partido!</p>
+<button id="start-game-btn" class="btn">Iniciar Partida</button>
+</div>
 
-        <!-- Pantalla de configuraci\u00f3n -->
-        <div id="config-screen" class="screen">
-            <h2>Configuración</h2>
-            
-            <!-- Cantidad de jugadores -->
-            <div class="option-group">
-                <div class="count-controls">
-                    <button class="arrow-btn" id="players-minus" aria-label="Disminuir jugadores"><i class="fas fa-arrow-left"></i></button>
-                    <div>
-                        <div class="option-label">Cantidad de jugadores</div>
-                        <div class="option-value" id="player-count-display">3</div>
-                    </div>
-                    <button class="arrow-btn" id="players-plus" aria-label="Aumentar jugadores"><i class="fas fa-arrow-right"></i></button>
-                </div>
-                
-                <!-- Bot\u00f3n para alternar la visi\u00f3n de los inputs de nombre -->
-                <button id="toggle-names-btn" class="btn secondary small-btn">Cambiar nombres de jugadores</button>
+<!-- Pantalla de configuración -->
+<div id="config-screen" class="screen">
+<h2>Configuración</h2>
+<!-- Cantidad de jugadores -->
+<div class="option-group">
+<div class="count-controls">
+<button class="arrow-btn" id="players-minus" aria-label="Disminuir jugadores"><i class="fas fa-arrow-left"></i></button>
+<div>
+<div class="option-label">Cantidad de jugadores</div>
+<div class="option-value" id="player-count-display">3</div>
+</div>
+<button class="arrow-btn" id="players-plus" aria-label="Aumentar jugadores"><i class="fas fa-arrow-right"></i></button>
+</div>
+<!-- Botón para alternar la visión de los inputs de nombre -->
+<button id="toggle-names-btn" class="btn secondary small-btn">Cambiar nombres de jugadores</button>
 
-                <!-- Inputs de nombre de jugadores se inyectan aqu\u00ed. Ocultos por defecto. -->
-                <div id="player-names-container" class="hidden"> 
-                </div>
-            </div>
-            
-            <!-- Cantidad de impostores -->
-            <div class="option-group">
-                <div class="count-controls">
-                    <button class="arrow-btn" id="impostors-minus" aria-label="Disminuir impostores"><i class="fas fa-arrow-left"></i></button>
-                    <div>
-                        <div class="option-label">Cantidad de impostores</div>
-                        <div class="option-value" id="impostor-count-display">1</div>
-                    </div>
-                    <button class="arrow-btn" id="impostors-plus" aria-label="Aumentar impostores"><i class="fas fa-arrow-right"></i></button>
-                </div>
-            </div>
+<!-- Inputs de nombre de jugadores se inyectan aquí. Ocultos por defecto. -->
+<div id="player-names-container" class="hidden">
+</div>
+</div>
+<!-- Cantidad de impostores -->
+<div class="option-group">
+<div class="count-controls">
+<button class="arrow-btn" id="impostors-minus" aria-label="Disminuir impostores"><i class="fas fa-arrow-left"></i></button>
+<div>
+<div class="option-label">Cantidad de impostores</div>
+<div class="option-value" id="impostor-count-display">1</div>
+</div>
+<button class="arrow-btn" id="impostors-plus" aria-label="Aumentar impostores"><i class="fas fa-arrow-right"></i></button>
+</div>
+</div>
 
-            <!-- Selector de categor\u00eda -->
-            <div class="option-group">
-                <div class="option-label">Tema de la Palabra</div>
-                <select id="category-selector">
-                    <option value="players">Jugadores de Fútbol</option>
-                    <option value="clubs">Clubes de Fútbol</option>
-                    <option value="random">Al Azar (Jugador o Club)</option>
-                </select>
-            </div>
+<!-- Selector de categoría -->
+<div class="option-group">
+<div class="option-label">Tema de la Palabra</div>
+<select id="category-selector">
+<option value="players">Jugadores de Fútbol</option>
+<option value="clubs">Clubes de Fútbol</option>
+<option value="clashroyale">Cartas de Clash Royale</option>
+<option value="f1Pilots">Pilotos de F1</option>
+<option value="alumnos3ro">Alumnos 3ro</option>
+<option value="genteColegio">Gente del Colegio</option>
+<option value="profes">Profesores</option>
+<option value="cosasCotidianas">Cosas Cotidianas</option>
+<option value="random">Al Azar</option>
+</select>
+</div>
 
-            <button id="start-round-btn" class="btn">Iniciar Partida</button>
-        </div>
+<button id="start-round-btn" class="btn">Iniciar Partida</button>
+</div>
 
-        <!-- Pantalla de juego (mostrar palabra) -->
-        <div id="word-screen" class="screen">
-            <h2 id="player-name-display">Es el turno de...</h2>
-            <div class="game-display">
-                <button id="show-word-btn" class="btn">Mostrar Palabra</button>
-                <p id="word-display" class="hidden"></p>
-            </div>
-            <button id="next-player-btn" class="btn secondary">Siguiente Jugador</button>
-        </div>
-        
-        <!-- Pantalla final -->
-        <div id="end-screen" class="screen">
-            <h2>¡Final de la Ronda!</h2>
-            <p id="end-message-initial">Ahora es momento de discutir y votar. ¡Quién te pareció el más sospechoso?</p>
-            
-            <button id="impostor-reveal-btn" class="btn">Revelar Impostores</button>
-            
-            <div id="reveal-area" class="hidden">
-                <p id="end-message-final">Los impostores eran:</p>
-                <ul id="impostor-list"></ul>
-            </div>
+<!-- Pantalla de juego (mostrar palabra) -->
+<div id="word-screen" class="screen">
+<h2 id="player-name-display">Es el turno de...</h2>
+<div class="game-display">
+<button id="show-word-btn" class="btn">Mostrar Palabra</button>
+<p id="word-display" class="hidden"></p>
+</div>
+<button id="next-player-btn" class="btn secondary">Siguiente Jugador</button>
+</div>
+<!-- Pantalla final -->
+<div id="end-screen" class="screen">
+<h2>¡Final de la Ronda!</h2>
+<p id="end-message-initial">Ahora es momento de discutir y votar. ¿Quién te pareció el más sospechoso?</p>
+<button id="impostor-reveal-btn" class="btn">Revelar Impostores</button>
+<div id="reveal-area" class="hidden">
+<p id="end-message-final">Los impostores eran:</p>
+<ul id="impostor-list"></ul>
+</div>
 
-            <button id="play-again-btn" class="btn">Jugar de Nuevo</button>
-            <button id="change-settings-btn" class="btn secondary">Cambiar Ajustes</button>
-        </div>
+<button id="play-again-btn" class="btn">Jugar de Nuevo</button>
+<button id="change-settings-btn" class="btn secondary">Cambiar Ajustes</button>
+</div>
 
-    </div>
-    
-    <!-- Modal para mensajes de error o informaci\u00f3n -->
-    <div id="message-modal" class="modal">
-        <div class="modal-content">
-            <p id="modal-text"></p>
-            <button id="modal-close-btn" class="btn">Entendido</button>
-        </div>
-    </div>
+</div>
+<!-- Modal para mensajes de error o información -->
+<div id="message-modal" class="modal">
+<div class="modal-content">
+<p id="modal-text"></p>
+<button id="modal-close-btn" class="btn">Entendido</button>
+</div>
+</div>
 
-    <script>
-        // --- BASE DE DATOS DE PALABRAS ---
-        const playersList = [
-            "Lionel Messi", "Cristiano Ronaldo", "Diego Maradona", "Pel\u00e9", "Zinedine Zidane",
-            "Ronaldo Naz\u00e1rio", "Johan Cruyff", "Franz Beckenbauer", "Garrincha", "Denzel Dumfries",
-            "Alfredo Di St\u00e9fano", "Ferenc Pusk\u00e1s", "Zlatan Ibrahimovic", "Marco van Basten", "Zlatan Ibrahimovi\u0107",
-            "Andr\u00e9s Iniesta", "Xavi Hern\u00e1ndez", "Ronaldinho Ga\u00fach", "Neymar Jr.", "Kylian Mbapp\u00e9",
-            "Erling Haaland", "Luka Modri\u0107", "Kevin De Bruyne", "Mohamed Salah", "Robert Lewandowski",
-            "Sergio Ramos", "Virgil van Dijk", "Manuel Neuer", "Alisson Becker", "Marc-Andr\u00e9 ter Stegen",
-            "Paulo Dybala", "\u00c1ngel Di Mar\u00eda", "Lautaro Mart\u00ednez", "Juli\u00e1n \u00c1lvarez", "Frank Fabra",
-            "N'Golo Kant\u00e9", "Sadio Man\u00e9", "Harry Kane", "Son Heung-min", "Thierry Henry",
-            "Didier Drogba", "Samuel Eto'o", "Arjen Robben", "Franck Rib\u00e9ry", "Carles Puyol",
-            "Gerard Piqu\u00e9", "Andrea Pirlo", "Gianluigi Buffon", "Iker Casillas", "David Beckham",
-            "Kak\u00e1", "Wayne Rooney", "Frank Lampard", "Steven Gerrard", "Paolo Maldini",
-            "Roberto Baggio", "Gabriel Batistuta", "Federico Chiesa", "Romario", "Bebeto",
-            "Javier Zanetti", "Gonzalo Montiel", "Juan Rom\u00e1n Riquelme", "Carlos T\u00e9vez", "Sergio Ag\u00fcero",
-            "Diego Simeone", "Alan Velasco", "Mascherano", "Javier Saviola", "Pablo Aimar",
-            "Radamel Falcao", "James Rodr\u00edguez", "Luis Su\u00e1rez", "Edinson Cavani", "Arturo Vidal",
-            "Alexis S\u00e1nchez", "Claudio Bravo", "Keylor Navas", "Christian Pulisic",
-            "Rodrigo De Paul", "Chicharito Hern\u00e1ndez",
-            "Guillermo Ochoa", "Francesco Totti", "Alessandro Del Piero", "Giorgio Chiellini",
-            "Leonardo Bonucci", "Nahuel Molina", "Mario Balotelli", "Paul Pogba", "Antoine Griezmann",
-            "Karim Benzema", "Vin\u00edcius Jr.", "Rodrygo", "Federico Valverde", "Casemiro",
-            "Toni Kroos", "Thomas M\u00fcller", "Joshua Kimmich", "Manuel Neuer", "Mesut \u00d6zil",
-            "Marco Reus", "Leroy San\u00e9", "Kai Havertz", "Timo Werner", "Mats Hummels",
-            "Jude Bellingham", "Phil Foden", "Jack Grealish", "Marcus Rashford", "Bukayo Saka",
-            "Mason Mount", "Declan Rice", "Trent Alexander-Arnold", "Kyle Walker", "Raheem Sterling",
-            "Hakim Ziyech", "Achraf Hakimi", "Riyad Mahrez", "Andr\u00e9 Onana",
-            "Christian Eriksen", "Pierre-Emerick Aubameyang",
-            "Heung-Min Son", "Miguel Merentiel",
-            "Ivan Rakiti\u0107", "Josko Gvardiol", "Gareth Bale",
-            "Frank Fabra", "Raúl Asencio", "Hugo Lloris", "Richarlison",
-            "Bruno Fernandes", "Bernardo Silva", "Jo\u00e3o F\u00e9lix", "R\u00faben Dias", "Raphael Varane",
-            "Raphael Guerreiro", "Jo\u00e3o Cancelo", "Gon\u00e7alo Ramos", "Vitinha", "Darwin N\u00fa\u00f1ez",
-            "Luis D\u00edaz", "Luis Muriel", "Juan Guillermo Cuadrado", "David Ospina", "David Neres",
-            "Antony", "Fred", "Gabriel Martinelli", "Gabriel Jesus", "Vini Jr",
-            "Sergio Busquets", "Jordi Alba", "Ferran Torres", "Gavi", "Pedri",
-            "Emiliano Mart\u00ednez", "Alejandro Garnacho", "Nico Otamendi"
-        ];
-        
-        const clubsList = [
-            "Real Madrid", "FC Barcelona", "Manchester United", "Liverpool FC", "Bayern M\u00fanich",
-            "Juventus FC", "AC Mil\u00e1n", "Inter de Mil\u00e1n", "Par\u00eds Saint-Germain", "Manchester City",
-            "Chelsea FC", "Arsenal FC", "Atl\u00e9tico de Madrid", "Borussia Dortmund", "Ajax \u00c1msterdam",
-            "River Plate", "Boca Juniors", "Independiente", "Racing Club", "San Lorenzo",
-            "Sao Paulo FC", "CR Flamengo", "SE Palmeiras", "Club Am\u00e9rica", "Chivas Guadalajara",
-            "LA Galaxy", "New York City FC", "Benfica", "FC Porto", "Sporting CP",
-            "Olympique de Lyon", "Olympique de Marsella", "AS M\u00f3naco", "Galatasaray SK", "Fenerbah\u00e7e SK",
-            "Besiktas JK", "Celtic FC", "Rangers FC", "Napoli", "AS Roma",
-            "Valencia CF", "Sevilla FC", "Real Betis", "Tottenham Hotspur", "Leicester City",
-            "West Ham United", "Everton FC", "Bayer Leverkusen", "RB Leipzig", "Schalke 04"
-        ];
-        
-        // --- VARIABLES DE ESTADO ---
-        let playerCount = 3;
-        let impostorCount = 1;
-        let playerNames = ["Jugador 1", "Jugador 2", "Jugador 3"]; // Inicialmente 3
-        let impostorIndices = [];
-        let wordForPlayers = "";
-        let currentPlayerIndex = 0;
-        let selectedCategory = "players";
-        
-        // --- REFERENCIAS DEL DOM ---
-        const startScreen = document.getElementById('start-screen');
-        const configScreen = document.getElementById('config-screen');
-        const wordScreen = document.getElementById('word-screen');
-        const endScreen = document.getElementById('end-screen');
+<script>
+// --- BASE DE DATOS DE PALABRAS ---
+const playersList = [
+"Lionel Messi", "Cristiano Ronaldo", "Diego Maradona", "Pelé", "Zinedine Zidane",
+"Ronaldo Nazário", "Johan Cruyff", "Franz Beckenbauer", "Garrincha", "Denzel Dumfries",
+"Alfredo Di Stéfano", "Ferenc Puskás", "Zlatan Ibrahimovic", "Marco van Basten", "Zlatan Ibrahimović",
+"Andrés Iniesta", "Xavi Hernández", "Ronaldinho Gaúcho", "Neymar Jr.", "Kylian Mbappé",
+"Erling Haaland", "Luka Modrić", "Kevin De Bruyne", "Mohamed Salah", "Robert Lewandowski",
+"Sergio Ramos", "Virgil van Dijk", "Manuel Neuer", "Alisson Becker", "Marc-André ter Stegen",
+"Paulo Dybala", "Ángel Di María", "Lautaro Martínez", "Julián Álvarez", "Frank Fabra",
+"N'Golo Kanté", "Sadio Mané", "Harry Kane", "Son Heung-min", "Thierry Henry",
+"Didier Drogba", "Samuel Eto'o", "Arjen Robben", "Franck Ribéry", "Carles Puyol",
+"Gerard Piqué", "Andrea Pirlo", "Gianluigi Buffon", "Iker Casillas", "David Beckham",
+"Kaká", "Wayne Rooney", "Frank Lampard", "Steven Gerrard", "Paolo Maldini",
+"Roberto Baggio", "Gabriel Batistuta", "Federico Chiesa", "Romario", "Bebeto",
+"Javier Zanetti", "Gonzalo Montiel", "Juan Román Riquelme", "Carlos Tévez", "Sergio Agüero",
+"Diego Simeone", "Alan Velasco", "Mascherano", "Javier Saviola", "Pablo Aimar",
+"Radamel Falcao", "James Rodríguez", "Luis Suárez", "Edinson Cavani", "Arturo Vidal",
+"Alexis Sánchez", "Claudio Bravo", "Keylor Navas", "Christian Pulisic",
+"Rodrigo De Paul", "Chicharito Hernández",
+"Guillermo Ochoa", "Francesco Totti", "Alessandro Del Piero", "Giorgio Chiellini",
+"Leonardo Bonucci", "Nahuel Molina", "Mario Balotelli", "Paul Pogba", "Antoine Griezmann",
+"Karim Benzema", "Vinícius Jr.", "Rodrygo", "Federico Valverde", "Casemiro",
+"Toni Kroos", "Thomas Müller", "Joshua Kimmich", "Manuel Neuer", "Mesut Özil",
+"Marco Reus", "Leroy Sané", "Kai Havertz", "Timo Werner", "Mats Hummels",
+"Jude Bellingham", "Phil Foden", "Jack Grealish", "Marcus Rashford", "Bukayo Saka",
+"Mason Mount", "Declan Rice", "Trent Alexander-Arnold", "Kyle Walker", "Raheem Sterling",
+"Hakim Ziyech", "Achraf Hakimi", "Riyad Mahrez", "André Onana",
+"Christian Eriksen", "Pierre-Emerick Aubameyang",
+"Heung-Min Son", "Miguel Merentiel",
+"Ivan Rakitić", "Josko Gvardiol", "Gareth Bale",
+"Frank Fabra", "Raúl Asencio", "Hugo Lloris", "Richarlison",
+"Bruno Fernandes", "Bernardo Silva", "João Félix", "Rúben Dias", "Raphael Varane",
+"Raphael Guerreiro", "João Cancelo", "Gonçalo Ramos", "Vitinha", "Darwin Núñez",
+"Luis Díaz", "Luis Muriel", "Juan Guillermo Cuadrado", "David Ospina", "David Neres",
+"Antony", "Fred", "Gabriel Martinelli", "Gabriel Jesus", "Vini Jr",
+"Sergio Busquets", "Jordi Alba", "Ferran Torres", "Gavi", "Pedri",
+"Emiliano Martínez", "Alejandro Garnacho", "Nico Otamendi"
+];
+const clubsList = [
+"Real Madrid", "FC Barcelona", "Manchester United", "Liverpool FC", "Bayern Múnich",
+"Juventus FC", "AC Milán", "Inter de Milán", "París Saint-Germain", "Manchester City",
+"Chelsea FC", "Arsenal FC", "Atlético de Madrid", "Borussia Dortmund", "Ajax Ámsterdam",
+"River Plate", "Boca Juniors", "Independiente", "Racing Club", "San Lorenzo",
+"São Paulo FC", "CR Flamengo", "SE Palmeiras", "Club América", "Chivas Guadalajara",
+"Inter Miami", "New York City FC", "Benfica", "FC Porto", "Sporting CP",
+"Olympique de Lyon", "Olympique de Marsella", "AS Mónaco", "Galatasaray SK", "Fenerbahçe SK",
+"Besiktas JK", "Celtic FC", "Rangers FC", "Napoli", "AS Roma",
+"Valencia CF", "Sevilla FC", "Real Betis", "Tottenham Hotspur", "Leicester City",
+"West Ham United", "Everton FC", "Bayer Leverkusen", "RB Leipzig", "Schalke 04"
+];
 
-        const startGameBtn = document.getElementById('start-game-btn');
-        const playersMinusBtn = document.getElementById('players-minus');
-        const playersPlusBtn = document.getElementById('players-plus');
-        const impostorsMinusBtn = document.getElementById('impostors-minus');
-        const impostorsPlusBtn = document.getElementById('impostors-plus');
-        const startRoundBtn = document.getElementById('start-round-btn');
-        const showWordBtn = document.getElementById('show-word-btn');
-        const nextPlayerBtn = document.getElementById('next-player-btn');
-        const playAgainBtn = document.getElementById('play-again-btn');
-        const changeSettingsBtn = document.getElementById('change-settings-btn');
-        const impostorRevealBtn = document.getElementById('impostor-reveal-btn');
-        const toggleNamesBtn = document.getElementById('toggle-names-btn');
-        
-        const playerCountEl = document.getElementById('player-count-display');
-        const impostorCountEl = document.getElementById('impostor-count-display');
-        const playerNameDisplayEl = document.getElementById('player-name-display');
-        const wordDisplayEl = document.getElementById('word-display');
-        const playerNamesContainer = document.getElementById('player-names-container');
-        const categorySelector = document.getElementById('category-selector');
-        const revealArea = document.getElementById('reveal-area');
-        const impostorListEl = document.getElementById('impostor-list');
-        const endMessageInitialEl = document.getElementById('end-message-initial');
+// --- NUEVA CATEGORÍA: CARTAS DE CLASH ROYALE ---
+const clashRoyaleList = [
+"Gigante Eléctrico", "Montapuercos", "P.E.K.K.A", "Mago Eléctrico", "Mini P.E.K.K.A",
+"Príncipe", "Princesa", "Caballero", "Valquiria", "Bruja",
+"Bebé Dragón", "Esqueleto Gigante", "Golem", "Sabueso de Lava", "Dragón Infernal",
+"Cementerio", "Tronco", "Bola de Fuego", "Rayo", "Cohete",
+"Descarga", "Flechas", "Veneno", "Tornado", "Emperatriz Espiritual",
+"Pandilla de Duendes", "Esqueletos", "Murciélagos", "Espíritu de Hielo", "Espíritu de Fuego",
+"Arqueras", "Mosquetera", "Duendes con Lanza", "Duendes", "Mega Esbirro",
+"Trío de Mosqueteras", "Bárbaros de Élite", "Mago de Hielo", "Leñador", "Bandida",
+"Furia", "Clon", "Espejo", "Recolector de Elixir", "Torre Infierno",
+"Ballesta", "Mortero", "Horno", "Jaula del Forzudo", "Ariete de Batalla",
+"Barril de Duendes", "Barril de Esqueletos", "Globo", "Minero", "Puerco Gigante",
+"Curandera Guerrera", "Torre Tesla", "Choza de Bárbaros", "Torre Bombardera", "Rey Esqueleto"
+];
+// 4. FÓRMULA 1 - PILOTOS (NUEVA CATEGORÍA)
+const f1PilotsList = [
+"Max Verstappen", "Lewis Hamilton", "Charles Leclerc", "Lando Norris", "Fernando Alonso",
+"Sergio Pérez", "George Russell", "Carlos Sainz", "Oscar Piastri", "Daniel Ricciardo",
+"Sebastian Vettel", "Michael Schumacher", "Ayrton Senna", "Alain Prost", "Niki Lauda",
+"Franco Colapinto", "Juan Manuel Fangio", "Kimi Räikkönen", "Jenson Button", "Nico Rosberg",
+"Valtteri Bottas", "Esteban Ocon", "Pierre Gasly", "Yuki Tsunoda", "Lance Stroll",
+"Alexander Albon", "Kevin Magnussen", "Nico Hülkenberg", "Zhou Guanyu", "Logan Sargeant", "Jack Doohan"
+];
 
-        const messageModal = document.getElementById('message-modal');
-        const modalText = document.getElementById('modal-text');
-        const modalCloseBtn = document.getElementById('modal-close-btn');
+// --- INICIO DE NUEVAS CATEGORÍAS ---
 
-        // --- FUNCIONES DE INTERFAZ ---
-        function showMessage(message) {
-            modalText.textContent = message;
-            messageModal.style.display = 'flex';
-        }
-        
-        modalCloseBtn.addEventListener('click', () => {
-            messageModal.style.display = 'none';
-        });
+// 5. ALUMNOS 3RO
+const alumnos3roList = [
+"Bauti", "Beltina", "Bernardita", "Guada Molina", "Simon Carranza", "Emma Llugdar", 
+"Emma Carabajal", "Fabri", "Felipon", "Fran", "Gae", "Guada Elias", "Jana", "Jazmin", 
+"Jere", "Juana", "Lara", "Lola", "Lolo", "Lucia", "Masao", "Mateo", "Matias", 
+"Santi Hiller", "Nika", "Julia", "Olivia", "Pedro", "Santino", "Simon Abbadie", 
+"Sofia", "Thiago Michiels", "Valentina", "Victoria"
+];
 
-        function showScreen(screen) {
-            document.querySelectorAll('.screen').forEach(s => {
-                s.classList.remove('active');
-            });
-            screen.classList.add('active');
-        }
+// 6. GENTE DEL COLEGIO
+const genteColegioList = [
+"Bauti", "Beltina", "Bernardita", "Guada Molina", "Simon Carranza", "Emma Llugdar", 
+"Emma Carabajal", "Fabri", "Felipon", "Fran", "Gae", "Guada Elias", "Jana", "Jazmin", 
+"Jere", "Juana", "Lara", "Lola", "Lolo", "Lucia", "Masao", "Mateo", "Matias", 
+"Santi Hiller", "Nika", "Julia", "Olivia", "Pedro", "Santino", "Simon Abbadie", 
+"Sofia", "Thiago Michiels", "Valentina", "Victoria", "La suplente de PDL", 
+"Diana Justel (Profe de Ingles)", "Mara Camba (Profe de Ingles)", "Cintia Milano (Profe de Plastica)", 
+"Vicky Lasarte (Profe de Matematica)", "Julieta Levis (Profe de Matematica)", 
+"Debora Alvarez (Profe de Matematica)", "Cyntia de La Vega (Profe de Matematica)", 
+"Francisco Santillan (Profe de Historia)", "Angie Diz (Profe de PDL)", 
+"Mariana Fernandez (Profe de Biologia)", "Estefania Maffei (Profe de Biologia)", 
+"Marcelo (Profe de Primaria Turno Mañana)", "Eugenia Huinchulef (Profe de Construccion de Ciudadania)", 
+"Cintia Olsen (Profe de Taller)", "Carmen (Profe de Teatro y Ciudadania)", 
+"Rocio Maldini (Profe de Fisico-Quimica)", "Quesadilla", "Gero (Hermano de Ramiro Ali)", 
+"Jano (1ro)", "Uma (Hermana de Jana)", "Tizi (Hermana de Lolo)", "Ramiro", "Felipe Sanchez", 
+"Joaco Lopez", "Thiago Barcala", "Simon Contartese", "Juanse", "Ezequiel", "Luisiana", 
+"Milo", "Manuel Saucedo", "Julia Franchini", "Alma (Bolivar)", "Lucas (Preceptor)", 
+"Giuli (Preceptora)", "Noe (Preceptora)", "Isis (Preceptora)", "Agucho (Recepción)"
+];
 
-        // --- L\u00d3GICA DE CONFIGURACI\u00d3N ---
-        function renderPlayerNameInputs() {
-            playerNamesContainer.innerHTML = '';
-            // Asegura que playerNames tenga el tama\u00f1o correcto
-            while (playerNames.length < playerCount) {
-                playerNames.push(`Jugador ${playerNames.length + 1}`);
-            }
-            playerNames = playerNames.slice(0, playerCount);
+// 7. PROFESORES
+const profesList = [
+"La suplente de PDL", "Diana Justel (Profe de Ingles)", "Mara Camba (Profe de Ingles)", 
+"Cintia Milano (Profe de Plastica)", "Vicky Lasarte (Profe de Matematica)", 
+"Julieta Levis (Profe de Matematica)", "Debora Alvarez (Profe de Matematica)", 
+"Cyntia de La Vega (Profe de Matematica)", "Francisco Santillan (Profe de Historia)", 
+"Angie Diz (Profe de PDL)", "Mariana Fernandez (Profe de Biologia)", 
+"Estefania Maffei (Profe de Biologia)", "Marcelo (Profe de Primaria Turno Mañana)", 
+"Eugenia Huinchulef (Profe de Construccion de Ciudadania)", "Cintia Olsen (Profe de Taller)", 
+"Carmen (Profe de Teatro y Ciudadania)", "Rocio Maldini (Profe de Fisico-Quimica)", 
+"Tic (Profe de Tecnologia)", "Lucia di Gregori (Profe de Ingles 1ro)", "Pedro (Suplente Matematica)"
+];
 
-            for (let i = 0; i < playerCount; i++) {
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.classList.add('player-name-input');
-                input.placeholder = `Jugador ${i + 1}`;
-                input.value = playerNames[i];
-                input.dataset.index = i;
-                
-                input.addEventListener('input', (e) => {
-                    // Guarda el nombre en el array al escribir
-                    playerNames[i] = e.target.value.trim() || `Jugador ${i + 1}`;
-                });
-                playerNamesContainer.appendChild(input);
-            }
-            playerCountEl.textContent = playerCount;
-            updateImpostorLimits();
-        }
+// 8. COSAS COTIDIANAS
+const cosasCotidianasList = [
+"Lápiz", "Goma de borrar", "Cuaderno", "Pizarrón", "Tiza", "Marcador", "Mochila", 
+"Cartuchera", "Silla", "Mesa", "Computadora", "Celular", "Llaves", "Vaso", "Plato", 
+"Tenedor", "Cuchillo", "Cuchara", "Botella de agua", "Zapatillas", "Remera", "Pantalón", 
+"Reloj", "Anteojos", "Cama", "Almohada", "Puerta", "Ventana", "Foco", "Lámpara", 
+"Libro", "Sofá", "Televisor", "Auto", "Bicicleta", "Colectivo", "Semáforo", "Árbol", 
+"Pasto", "Nube", "Sol", "Luna", "Cepillo de dientes", "Ducha", "Jabón", "Shampoo"
+];
 
-        function updateImpostorLimits() {
-            // No hay l\u00edmite m\u00e1ximo de impostores, solo deben ser menos que los jugadores
-            if (impostorCount >= playerCount) {
-                impostorCount = playerCount - 1;
-            }
-            // M\u00ednimo 1 impostor si hay jugadores (m\u00ednimo 3 jugadores)
-            if (playerCount > 1 && impostorCount < 1) {
-                impostorCount = 1;
-            }
-            impostorCountEl.textContent = impostorCount;
-        }
-        
-        // --- L\u00d3GICA DE ASIGNACI\u00d3N DEL JUEGO ---
-        function setupGame() {
-            currentPlayerIndex = 0;
-            impostorIndices = [];
+// --- FIN DE NUEVAS CATEGORÍAS ---
 
-            // 1. Elegir la lista de palabras
-            let wordList;
-            if (selectedCategory === 'players') {
-                wordList = playersList;
-            } else if (selectedCategory === 'clubs') {
-                wordList = clubsList;
-            } else { // 'random'
-                wordList = Math.random() < 0.5 ? playersList : clubsList;
-            }
 
-            // 2. Elegir la palabra para los jugadores
-            const randomIndex = Math.floor(Math.random() * wordList.length);
-            wordForPlayers = wordList[randomIndex];
+// --- VARIABLES DE ESTADO ---
+let playerCount = 3;
+let impostorCount = 1;
+let playerNames = ["Jugador 1", "Jugador 2", "Jugador 3"]; // Inicialmente 3
+let impostorIndices = [];
+let wordForPlayers = "";
+let currentPlayerIndex = 0;
+let selectedCategory = "players";
 
-            // 3. Asignar los impostores
-            const availablePlayerIndices = Array.from({length: playerCount}, (_, i) => i);
-            
-            while (impostorIndices.length < impostorCount) {
-                const impostorIndex = availablePlayerIndices.splice(Math.floor(Math.random() * availablePlayerIndices.length), 1)[0];
-                impostorIndices.push(impostorIndex);
-            }
-        }
+// --- REFERENCIAS DEL DOM ---
+const startScreen = document.getElementById('start-screen');
+const configScreen = document.getElementById('config-screen');
+const wordScreen = document.getElementById('word-screen');
+const endScreen = document.getElementById('end-screen');
 
-        function updateWordScreenUI() {
-            // Muestra SOLO el nombre del jugador actual (cambio solicitado)
-            playerNameDisplayEl.textContent = playerNames[currentPlayerIndex];
-            
-            // Restablece la pantalla para mostrar la palabra
-            wordDisplayEl.textContent = "";
-            wordDisplayEl.classList.add('hidden');
-            showWordBtn.classList.remove('hidden');
-            
-            // L\u00f3gica para el \u00faltimo jugador
-            if (currentPlayerIndex === playerCount - 1) {
-                nextPlayerBtn.textContent = "Finalizar Ronda";
-            } else {
-                nextPlayerBtn.textContent = "Siguiente Jugador";
-            }
-        }
-        
-        // --- EVENT LISTENERS ---
+const startGameBtn = document.getElementById('start-game-btn');
+const playersMinusBtn = document.getElementById('players-minus');
+const playersPlusBtn = document.getElementById('players-plus');
+const impostorsMinusBtn = document.getElementById('impostors-minus');
+const impostorsPlusBtn = document.getElementById('impostors-plus');
+const startRoundBtn = document.getElementById('start-round-btn');
+const showWordBtn = document.getElementById('show-word-btn');
+const nextPlayerBtn = document.getElementById('next-player-btn');
+const playAgainBtn = document.getElementById('play-again-btn');
+const changeSettingsBtn = document.getElementById('change-settings-btn');
+const impostorRevealBtn = document.getElementById('impostor-reveal-btn');
+const toggleNamesBtn = document.getElementById('toggle-names-btn');
+const playerCountEl = document.getElementById('player-count-display');
+const impostorCountEl = document.getElementById('impostor-count-display');
+const playerNameDisplayEl = document.getElementById('player-name-display');
+const wordDisplayEl = document.getElementById('word-display');
+const playerNamesContainer = document.getElementById('player-names-container');
+const categorySelector = document.getElementById('category-selector');
+const revealArea = document.getElementById('reveal-area');
+const impostorListEl = document.getElementById('impostor-list');
+const endMessageInitialEl = document.getElementById('end-message-initial');
 
-        // Pantalla de inicio
-        startGameBtn.addEventListener('click', () => {
-            showScreen(configScreen);
-            renderPlayerNameInputs();
-        });
-        
-        // Bot\u00f3n para mostrar/ocultar los campos de nombres
-        toggleNamesBtn.addEventListener('click', () => {
-            playerNamesContainer.classList.toggle('hidden');
-            const isHidden = playerNamesContainer.classList.contains('hidden');
-            toggleNamesBtn.textContent = isHidden ? "Cambiar nombres de jugadores" : "Ocultar nombres";
-        });
+const messageModal = document.getElementById('message-modal');
+const modalText = document.getElementById('modal-text');
+const modalCloseBtn = document.getElementById('modal-close-btn');
 
-        // Controles de Jugadores
-        playersMinusBtn.addEventListener('click', () => {
-            if (playerCount > 3) {
-                playerCount--;
-                renderPlayerNameInputs();
-            } else {
-                showMessage("La cantidad mínima de jugadores es 3.");
-            }
-        });
-        
-        playersPlusBtn.addEventListener('click', () => {
-            if (playerCount < 34) { // L\u00edmite m\u00e1s alto para m\u00e1s flexibilidad
-                playerCount++;
-                renderPlayerNameInputs();
-            } else {
-                showMessage("Límite de 34 jugadores alcanzado.");
-            }
-        });
-        
-        // Controles de Impostores
-        impostorsMinusBtn.addEventListener('click', () => {
-            if (impostorCount > 1) {
-                impostorCount--;
-                impostorCountEl.textContent = impostorCount;
-            } else {
-                showMessage("La cantidad mínima de impostores es 1.");
-            }
-            updateImpostorLimits();
-        });
-        
-        impostorsPlusBtn.addEventListener('click', () => {
-            if (impostorCount < playerCount - 1) {
-                impostorCount++;
-                impostorCountEl.textContent = impostorCount;
-            } else {
-                showMessage(`No puede haber ${playerCount} o más impostores si solo hay ${playerCount} jugadores.`);
-            }
-            updateImpostorLimits();
-        });
-        
-        // Selector de Categor\u00eda
-        categorySelector.addEventListener('change', (e) => {
-            selectedCategory = e.target.value;
-        });
+// --- FUNCIONES DE INTERFAZ ---
+function showMessage(message) {
+modalText.textContent = message;
+messageModal.style.display = 'flex';
+}
+modalCloseBtn.addEventListener('click', () => {
+messageModal.style.display = 'none';
+});
 
-        // Bot\u00f3n Iniciar Partida (Configuraci\u00f3n)
-        startRoundBtn.addEventListener('click', () => {
-            if (playerCount <= impostorCount) {
-                showMessage("La cantidad de jugadores debe ser mayor que la de impostores.");
-                return;
-            }
-            // Recoger los nombres por \u00faltima vez
-            document.querySelectorAll('.player-name-input').forEach((input, index) => {
-                 playerNames[index] = input.value.trim() || `Jugador ${index + 1}`;
-            });
+function showScreen(screen) {
+document.querySelectorAll('.screen').forEach(s => {
+s.classList.remove('active');
+});
+screen.classList.add('active');
+}
 
-            setupGame();
-            updateWordScreenUI();
-            showScreen(wordScreen);
-        });
-        
-        // Bot\u00f3n Mostrar Palabra
-        showWordBtn.addEventListener('click', () => {
-            const isImpostor = impostorIndices.includes(currentPlayerIndex);
-            
-            if (isImpostor) {
-                wordDisplayEl.textContent = "IMPOSTOR";
-                wordDisplayEl.classList.add('impostor-text');
-                // Se elimin\u00f3 playSound('impostor');
-            } else {
-                wordDisplayEl.textContent = wordForPlayers;
-                wordDisplayEl.classList.remove('impostor-text');
-                // Se elimin\u00f3 playSound('success');
-            }
-            
-            wordDisplayEl.classList.remove('hidden');
-            showWordBtn.classList.add('hidden');
-        });
-        
-        // Bot\u00f3n Siguiente Jugador / Finalizar Ronda
-        nextPlayerBtn.addEventListener('click', () => {
-            if (currentPlayerIndex < playerCount - 1) {
-                currentPlayerIndex++;
-                updateWordScreenUI();
-            } else {
-                // \u00daltimo jugador vio su palabra
-                endMessageInitialEl.classList.remove('hidden');
-                impostorRevealBtn.classList.remove('hidden');
-                revealArea.classList.add('hidden');
-                showScreen(endScreen);
-            }
-        });
+// --- LÓGICA DE CONFIGURACIÓN ---
+function renderPlayerNameInputs() {
+playerNamesContainer.innerHTML = '';
+// Asegura que playerNames tenga el tamaño correcto
+while (playerNames.length < playerCount) {
+playerNames.push(`Jugador ${playerNames.length + 1}`);
+}
+playerNames = playerNames.slice(0, playerCount);
 
-        // Bot\u00f3n Revelar Impostores
-        impostorRevealBtn.addEventListener('click', () => {
-            // Se elimin\u00f3 playSound('impostor');
-            
-            // Oculta el bot\u00f3n de revelaci\u00f3n
-            impostorRevealBtn.classList.add('hidden');
-            endMessageInitialEl.classList.add('hidden');
-            
-            // Muestra el \u00e1rea de revelaci\u00f3n
-            revealArea.classList.remove('hidden');
-            impostorListEl.innerHTML = '';
-            
-            // Genera la lista de nombres de impostores
-            impostorIndices.forEach(index => {
-                const li = document.createElement('li');
-                li.textContent = playerNames[index];
-                impostorListEl.appendChild(li);
-            });
-        });
+for (let i = 0; i < playerCount; i++) {
+const input = document.createElement('input');
+input.type = 'text';
+input.classList.add('player-name-input');
+input.placeholder = `Jugador ${i + 1}`;
+input.value = playerNames[i];
+input.dataset.index = i;
+input.addEventListener('input', (e) => {
+// Guarda el nombre en el array al escribir
+playerNames[i] = e.target.value.trim() || `Jugador ${i + 1}`;
+});
+playerNamesContainer.appendChild(input);
+}
+playerCountEl.textContent = playerCount;
+updateImpostorLimits();
+}
 
-        // Bot\u00f3n Jugar de Nuevo
-        playAgainBtn.addEventListener('click', () => {
-            setupGame(); // Nueva ronda con la misma configuraci\u00f3n
-            updateWordScreenUI();
-            showScreen(wordScreen);
-        });
+function updateImpostorLimits() {
+// No hay límite máximo de impostores, solo deben ser menos que los jugadores
+if (impostorCount >= playerCount) {
+impostorCount = playerCount - 1;
+}
+// Mínimo 1 impostor si hay jugadores (mínimo 3 jugadores)
+if (playerCount > 1 && impostorCount < 1) {
+impostorCount = 1;
+}
+impostorCountEl.textContent = impostorCount;
+}
+// --- LÓGICA DE ASIGNACIÓN DEL JUEGO ---
+function setupGame() {
+currentPlayerIndex = 0;
+impostorIndices = [];
 
-        // Bot\u00f3n Cambiar Ajustes
-        changeSettingsBtn.addEventListener('click', () => {
-            renderPlayerNameInputs(); // Vuelve a cargar los inputs de nombre
-            showScreen(configScreen);
-        });
+// 1. Elegir la lista de palabras
+let wordList;
+// Dentro de la función setupGame():
 
-        // --- INICIALIZACI\u00d3N ---
-        document.addEventListener('DOMContentLoaded', () => {
-            showScreen(startScreen);
-            renderPlayerNameInputs(); // Inicializa los inputs de nombre
-        });
+if (selectedCategory === 'players') {
+wordList = playersList;
+} else if (selectedCategory === 'clubs') {
+wordList = clubsList;
+} else if (selectedCategory === 'clashroyale') { // <--- LÓGICA EXISTENTE
+wordList = clashRoyaleList;
+} else if (selectedCategory === 'f1Pilots') { // <--- LÓGICA EXISTENTE
+wordList = f1PilotsList;
+} else if (selectedCategory === 'alumnos3ro') { // <--- NUEVA LÓGICA
+wordList = alumnos3roList;
+} else if (selectedCategory === 'genteColegio') { // <--- NUEVA LÓGICA
+wordList = genteColegioList;
+} else if (selectedCategory === 'profes') { // <--- NUEVA LÓGICA
+wordList = profesList;
+} else if (selectedCategory === 'cosasCotidianas') { // <--- NUEVA LÓGICA
+wordList = cosasCotidianasList;
+} else { // 'random'
+// El 'random' ahora elige entre TODAS las listas disponibles
+const lists = [
+playersList, clubsList, clashRoyaleList, f1PilotsList,
+alumnos3roList, genteColegioList, profesList, cosasCotidianasList
+];
+wordList = lists[Math.floor(Math.random() * lists.length)];
+}
 
-    </script>
+// 2. Elegir la palabra para los jugadores
+const randomIndex = Math.floor(Math.random() * wordList.length);
+wordForPlayers = wordList[randomIndex];
+
+// 3. Asignar los impostores
+const availablePlayerIndices = Array.from({length: playerCount}, (_, i) => i);
+while (impostorIndices.length < impostorCount) {
+const impostorIndex = availablePlayerIndices.splice(Math.floor(Math.random() * availablePlayerIndices.length), 1)[0];
+impostorIndices.push(impostorIndex);
+}
+}
+
+function updateWordScreenUI() {
+// Muestra SOLO el nombre del jugador actual (cambio solicitado)
+playerNameDisplayEl.textContent = playerNames[currentPlayerIndex];
+// Restablece la pantalla para mostrar la palabra
+wordDisplayEl.textContent = "";
+wordDisplayEl.classList.add('hidden');
+showWordBtn.classList.remove('hidden');
+// Lógica para el último jugador
+if (currentPlayerIndex === playerCount - 1) {
+nextPlayerBtn.textContent = "Finalizar Ronda";
+} else {
+nextPlayerBtn.textContent = "Siguiente Jugador";
+}
+}
+// --- EVENT LISTENERS ---
+
+// Pantalla de inicio
+startGameBtn.addEventListener('click', () => {
+showScreen(configScreen);
+renderPlayerNameInputs();
+});
+// Botón para mostrar/ocultar los campos de nombres
+toggleNamesBtn.addEventListener('click', () => {
+playerNamesContainer.classList.toggle('hidden');
+const isHidden = playerNamesContainer.classList.contains('hidden');
+toggleNamesBtn.textContent = isHidden ? "Cambiar nombres de jugadores" : "Ocultar nombres";
+});
+
+// Controles de Jugadores
+playersMinusBtn.addEventListener('click', () => {
+if (playerCount > 3) {
+playerCount--;
+renderPlayerNameInputs();
+} else {
+showMessage("La cantidad mínima de jugadores es 3.");
+}
+});
+playersPlusBtn.addEventListener('click', () => {
+if (playerCount < 34) { // Límite más alto para más flexibilidad
+playerCount++;
+renderPlayerNameInputs();
+} else {
+showMessage("Límite de 34 jugadores alcanzado.");
+}
+});
+// Controles de Impostores
+impostorsMinusBtn.addEventListener('click', () => {
+if (impostorCount > 1) {
+impostorCount--;
+impostorCountEl.textContent = impostorCount;
+} else {
+showMessage("La cantidad mínima de impostores es 1.");
+}
+updateImpostorLimits();
+});
+impostorsPlusBtn.addEventListener('click', () => {
+if (impostorCount < playerCount - 1) {
+impostorCount++;
+impostorCountEl.textContent = impostorCount;
+} else {
+showMessage(`No puede haber ${playerCount} o más impostores si solo hay ${playerCount} jugadores.`);
+}
+updateImpostorLimits();
+});
+// Selector de Categoría
+categorySelector.addEventListener('change', (e) => {
+selectedCategory = e.target.value;
+});
+
+// Botón Iniciar Partida (Configuración)
+startRoundBtn.addEventListener('click', () => {
+if (playerCount <= impostorCount) {
+showMessage("La cantidad de jugadores debe ser mayor que la de impostores.");
+return;
+}
+// Recoger los nombres por última vez
+document.querySelectorAll('.player-name-input').forEach((input, index) => {
+playerNames[index] = input.value.trim() || `Jugador ${index + 1}`;
+});
+
+setupGame();
+updateWordScreenUI();
+showScreen(wordScreen);
+});
+// Botón Mostrar Palabra
+showWordBtn.addEventListener('click', () => {
+const isImpostor = impostorIndices.includes(currentPlayerIndex);
+if (isImpostor) {
+wordDisplayEl.textContent = "IMPOSTOR";
+wordDisplayEl.classList.add('impostor-text');
+// Se eliminó playSound('impostor');
+} else {
+wordDisplayEl.textContent = wordForPlayers;
+wordDisplayEl.classList.remove('impostor-text');
+// Se eliminó playSound('success');
+}
+wordDisplayEl.classList.remove('hidden');
+showWordBtn.classList.add('hidden');
+});
+// Botón Siguiente Jugador / Finalizar Ronda
+nextPlayerBtn.addEventListener('click', () => {
+if (currentPlayerIndex < playerCount - 1) {
+currentPlayerIndex++;
+updateWordScreenUI();
+} else {
+// Último jugador vio su palabra
+endMessageInitialEl.classList.remove('hidden');
+impostorRevealBtn.classList.remove('hidden');
+revealArea.classList.add('hidden');
+showScreen(endScreen);
+}
+});
+
+// Botón Revelar Impostores
+impostorRevealBtn.addEventListener('click', () => {
+// Se eliminó playSound('impostor');
+// Oculta el botón de revelación
+impostorRevealBtn.classList.add('hidden');
+endMessageInitialEl.classList.add('hidden');
+// Muestra el área de revelación
+revealArea.classList.remove('hidden');
+impostorListEl.innerHTML = '';
+// Genera la lista de nombres de impostores
+impostorIndices.forEach(index => {
+const li = document.createElement('li');
+li.textContent = playerNames[index];
+impostorListEl.appendChild(li);
+});
+});
+
+// Botón Jugar de Nuevo
+playAgainBtn.addEventListener('click', () => {
+setupGame(); // Nueva ronda con la misma configuración
+updateWordScreenUI();
+showScreen(wordScreen);
+});
+
+// Botón Cambiar Ajustes
+changeSettingsBtn.addEventListener('click', () => {
+renderPlayerNameInputs(); // Vuelve a cargar los inputs de nombre
+showScreen(configScreen);
+});
+
+// --- INICIALIZACIÓN ---
+document.addEventListener('DOMContentLoaded', () => {
+showScreen(startScreen);
+renderPlayerNameInputs(); // Inicializa los inputs de nombre
+});
+
+</script>
 </body>
 </html>
