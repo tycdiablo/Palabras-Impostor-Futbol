@@ -630,7 +630,7 @@ let db, auth, userId, userName, appId, roomsPath;
 let currentRoomId = null;
 let isHost = false;
 let roomUnsubscribe = null; // Para detener el listener de Firestore
-let isFirebaseReady = false; // NUEVO: Flag para confirmar que la autenticación terminó
+let isFirebaseReady = false; // Flag para confirmar que la autenticación terminó
 
 // --- BASE DE DATOS DE PALABRAS ---
 const playersList = [
@@ -894,67 +894,99 @@ async function retryOperation(fn, maxRetries = 3) {
     }
 }
 
-// --- FUNCIONES DE FIREBASE ---
+// --- FUNCIONES DE FIREBASE (ACTUALIZADAS PARA SER MÁS ROBUSTAS) ---
 async function initFirebase() {
-    // Importar funciones de las variables globales
-    const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore, setLogLevel } = window.firebase;
-
-    // Usar variables globales de entorno (si existen)
-    const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+    // 1. Configuración de Variables
+    const firebaseConfigString = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
     appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-    // Fallback para pruebas locales si no hay config
+    let firebaseConfig;
+    try {
+        firebaseConfig = JSON.parse(firebaseConfigString);
+    } catch (e) {
+        console.error("Firebase: Error al parsear la configuración. El servidor está mal configurado o faltan variables.");
+        onlineGameBtn.textContent = "ERROR: Configuración Inválida";
+        onlineGameBtn.disabled = true;
+        showMessage("El servidor no pudo ser configurado (JSON inválido). El modo online está desactivado.");
+        isFirebaseReady = false;
+        return;
+    }
+
     if (!firebaseConfig.apiKey) {
-        console.warn("Firebase config no encontrada. Usando placeholders.");
+        console.error("Firebase: No se encontró apiKey. Es probable que la configuración no esté disponible.");
+        onlineGameBtn.textContent = "ERROR: Configuración Faltante";
+        onlineGameBtn.disabled = true;
+        showMessage("El entorno no proporcionó la configuración de Firebase necesaria. El modo online está desactivado.");
+        isFirebaseReady = false;
+        return;
     }
     
-    // Inicializar Firebase
+    // 2. Establecer UI a estado de carga
+    onlineGameBtn.textContent = "Conectando al Servidor...";
+    onlineGameBtn.disabled = true;
+
+    // 3. Inicializar Firebase
+    const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore, setLogLevel } = window.firebase;
+
     const app = initializeApp(firebaseConfig);
     db = getFirestore(app);
     auth = getAuth(app);
     setLogLevel('Debug'); // Para ver logs de Firestore
-
-    // Definir la ruta de la base de datos
+    
     roomsPath = `/artifacts/${appId}/public/data/impostor_rooms`;
 
-    // Autenticar al usuario con reintentos
     try {
+        // 4. Intentar la Autenticación con reintentos
         const signInTask = async () => {
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                console.log("Firebase: Intentando signInWithCustomToken...");
                 await signInWithCustomToken(auth, __initial_auth_token);
             } else {
+                console.log("Firebase: Intentando signInAnonymously...");
                 await signInAnonymously(auth);
             }
         };
         
-        await retryOperation(signInTask, 3); // Intentará 3 veces
+        await retryOperation(signInTask, 3);
+        console.log("Firebase: Autenticación inicial exitosa o completada.");
         
-        // Esperar el cambio de estado de autenticación
-        await new Promise(resolve => {
+        // 5. Esperar la confirmación final del estado de autenticación (onAuthStateChanged)
+        await new Promise((resolve, reject) => {
+            // Establecer un timeout de respaldo en caso de que onAuthStateChanged nunca se dispare
+            const timeout = setTimeout(() => {
+                unsubscribe();
+                reject(new Error("onAuthStateChanged timeout. No se pudo confirmar el estado de auth en 8 segundos."));
+            }, 8000); // 8 segundos de espera
+            
             const unsubscribe = onAuthStateChanged(auth, (user) => {
+                clearTimeout(timeout);
                 if (user) {
                     userId = user.uid;
-                    console.log("Usuario autenticado:", userId);
+                    console.log("Firebase: Conexión y Auth confirmada. UID:", userId);
                 } else {
-                    console.warn("Usuario no autenticado. Usando ID temporal.");
-                    // Generar un ID temporal
-                    userId = 'guest-' + Math.random().toString(36).substring(2, 9);
+                    // Esto no debería ocurrir si el signIn fue exitoso, pero lo manejamos
+                    console.warn("Firebase: onAuthStateChanged completado, pero el usuario no está logueado.");
+                    userId = 'guest-' + crypto.randomUUID(); // Fallback ID
                 }
                 
-                isFirebaseReady = true; // El servidor está listo AHORA
+                isFirebaseReady = true;
                 onlineGameBtn.textContent = "Sala Online";
                 onlineGameBtn.disabled = false;
                 
-                unsubscribe(); // Detener el listener después del primer cambio
+                unsubscribe();
                 resolve();
+            }, (error) => {
+                clearTimeout(timeout);
+                unsubscribe();
+                reject(error);
             });
         });
         
     } catch (error) {
-        console.error("Error de autenticación final después de reintentos:", error);
-        // Si falla después de todos los reintentos
-        showMessage("Error al conectar con el servidor. El modo online no funcionará.");
-        onlineGameBtn.textContent = "Error de Conexión";
+        // 6. Falla crítica
+        console.error("Firebase: Falla crítica de conexión/autenticación final:", error.message || error);
+        showMessage(`Fallo crítico al conectar al servidor: ${error.message || 'Error desconocido'}. El modo online está deshabilitado.`);
+        onlineGameBtn.textContent = "ERROR: Conexión Fallida";
         onlineGameBtn.disabled = true;
         isFirebaseReady = false;
     }
@@ -1633,7 +1665,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // El texto también se actualiza al finalizar la conexión
     
     try {
-        await initFirebase(); // Esperar a que Firebase esté listo (con reintentos)
+        await initFirebase(); // Esperar a que Firebase esté listo (con reintentos y timeout)
     } catch (e) {
         // initFirebase ya actualiza la UI si falla, este catch es solo un respaldo.
         console.error("Fallo la inicialización de Firebase", e);
