@@ -39,6 +39,12 @@ background-size: 50px;
 background-repeat: repeat;
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
+transition: background 0.5s;
+}
+
+/* NUEVO: Estilo para la alarma del impostor */
+body.impostor-alarm {
+background: #800 !important; /* Rojo oscuro */
 }
 
 .container {
@@ -153,7 +159,7 @@ font-family: var(--font-secondary);
 font-size: 1.2rem;
 font-weight: 700;
 color: var(--color-text-dark);
-width: 150px;
+/* width: 150px; */ /* Ajustado para checkboxes */
 }
 
 .option-value {
@@ -211,6 +217,35 @@ background-color: #f8f8f8;
 font-family: var(--font-secondary);
 cursor: pointer;
 }
+
+/* NUEVO: Estilos para grupo de checkboxes */
+.checkbox-group {
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+gap: 15px;
+padding: 10px 20px;
+text-align: left;
+width: 100%;
+box-sizing: border-box;
+}
+.checkbox-group div {
+display: flex;
+align-items: center;
+gap: 10px;
+}
+.checkbox-group label {
+font-family: var(--font-secondary);
+font-size: 1.1rem;
+font-weight: 500;
+color: var(--color-text-dark);
+}
+.checkbox-group input[type="checkbox"] {
+width: 20px;
+height: 20px;
+cursor: pointer;
+}
+
 
 /* Pantalla de juego */
 .game-display {
@@ -291,6 +326,13 @@ margin-top: 10px;
 font-size: 1.2rem;
 color: var(--color-text-dark);
 }
+/* NUEVO: Info de ronda especial */
+#special-round-info {
+font-size: 1.3rem;
+font-weight: bold;
+color: var(--color-primary);
+margin-top: 10px;
+}
 </style>
 </head>
 <body>
@@ -311,7 +353,7 @@ color: var(--color-text-dark);
 <div class="count-controls">
 <button class="arrow-btn" id="players-minus" aria-label="Disminuir jugadores"><i class="fas fa-arrow-left"></i></button>
 <div>
-<div class="option-label">Cantidad de jugadores</div>
+<div class="option-label">Jugadores</div>
 <div class="option-value" id="player-count-display">3</div>
 </div>
 <button class="arrow-btn" id="players-plus" aria-label="Aumentar jugadores"><i class="fas fa-arrow-right"></i></button>
@@ -328,7 +370,7 @@ color: var(--color-text-dark);
 <div class="count-controls">
 <button class="arrow-btn" id="impostors-minus" aria-label="Disminuir impostores"><i class="fas fa-arrow-left"></i></button>
 <div>
-<div class="option-label">Cantidad de impostores</div>
+<div class="option-label">Impostores</div>
 <div class="option-value" id="impostor-count-display">1</div>
 </div>
 <button class="arrow-btn" id="impostors-plus" aria-label="Aumentar impostores"><i class="fas fa-arrow-right"></i></button>
@@ -351,6 +393,19 @@ color: var(--color-text-dark);
 </select>
 </div>
 
+<!-- NUEVO: Opciones de Juego -->
+<div class="option-group checkbox-group">
+<div>
+<input type="checkbox" id="special-rounds-check">
+<label for="special-rounds-check">Habilitar Rondas Especiales</label>
+</div>
+<div>
+<input type="checkbox" id="impostor-knows-check" checked>
+<label for="impostor-knows-check">El impostor sabe que es impostor</label>
+</div>
+</div>
+<!-- FIN DE NUEVAS OPCIONES -->
+
 <button id="start-round-btn" class="btn">Iniciar Partida</button>
 </div>
 
@@ -369,6 +424,7 @@ color: var(--color-text-dark);
 <p id="end-message-initial">Ahora es momento de discutir y votar. ¿Quién te pareció el más sospechoso?</p>
 <button id="impostor-reveal-btn" class="btn">Revelar Impostores</button>
 <div id="reveal-area" class="hidden">
+<p id="special-round-info" class="hidden"></p> <!-- NUEVO: Para info de ronda especial -->
 <p id="end-message-final">Los impostores eran:</p>
 <ul id="impostor-list"></ul>
 </div>
@@ -385,6 +441,11 @@ color: var(--color-text-dark);
 <button id="modal-close-btn" class="btn">Entendido</button>
 </div>
 </div>
+
+<!-- NUEVO: Audio de alarma (debe estar fuera del container) -->
+<!-- CAMBIA EL SRC por tu enlace de audio -->
+<audio id="alarm-sound" src="placeholder_alarm.mp3" loop preload="auto"></audio>
+
 
 <script>
 // --- BASE DE DATOS DE PALABRAS ---
@@ -520,6 +581,18 @@ const cosasCotidianasList = [
 
 // --- FIN DE NUEVAS CATEGORÍAS ---
 
+// Listas de palabras unificadas para acceso global
+const allWordLists = {
+    players: playersList,
+    clubs: clubsList,
+    clashroyale: clashRoyaleList,
+    f1Pilots: f1PilotsList,
+    alumnos3ro: alumnos3roList,
+    genteColegio: genteColegioList,
+    profes: profesList,
+    cosasCotidianas: cosasCotidianasList
+};
+
 
 // --- VARIABLES DE ESTADO ---
 let playerCount = 3;
@@ -527,8 +600,13 @@ let impostorCount = 1;
 let playerNames = ["Jugador 1", "Jugador 2", "Jugador 3"]; // Inicialmente 3
 let impostorIndices = [];
 let wordForPlayers = "";
+let wordForImpostor = ""; // NUEVO: Para la palabra del impostor si no sabe
 let currentPlayerIndex = 0;
 let selectedCategory = "players";
+// NUEVAS variables de estado
+let enableSpecialRounds = false;
+let impostorKnows = true;
+let currentRoundType = "normal"; // "normal", "todosImpostores", "nadieImpostor", "todosMenosUno", "todosDistintos"
 
 // --- REFERENCIAS DEL DOM ---
 const startScreen = document.getElementById('start-screen');
@@ -557,10 +635,16 @@ const categorySelector = document.getElementById('category-selector');
 const revealArea = document.getElementById('reveal-area');
 const impostorListEl = document.getElementById('impostor-list');
 const endMessageInitialEl = document.getElementById('end-message-initial');
+const specialRoundInfoEl = document.getElementById('special-round-info'); // NUEVO
 
 const messageModal = document.getElementById('message-modal');
 const modalText = document.getElementById('modal-text');
 const modalCloseBtn = document.getElementById('modal-close-btn');
+
+// NUEVAS referencias del DOM
+const specialRoundsCheck = document.getElementById('special-rounds-check');
+const impostorKnowsCheck = document.getElementById('impostor-knows-check');
+const alarmSound = document.getElementById('alarm-sound');
 
 // --- FUNCIONES DE INTERFAZ ---
 function showMessage(message) {
@@ -576,6 +660,15 @@ document.querySelectorAll('.screen').forEach(s => {
 s.classList.remove('active');
 });
 screen.classList.add('active');
+}
+
+// NUEVO: Detener alarma (función de ayuda)
+function stopAlarm() {
+    document.body.classList.remove('impostor-alarm');
+    alarmSound.pause();
+    if (alarmSound.currentTime) {
+        alarmSound.currentTime = 0;
+    }
 }
 
 // --- LÓGICA DE CONFIGURACIÓN ---
@@ -615,54 +708,88 @@ impostorCount = 1;
 }
 impostorCountEl.textContent = impostorCount;
 }
-// --- LÓGICA DE ASIGNACIÓN DEL JUEGO ---
+
+// --- LÓGICA DE ASIGNACIÓN DEL JUEGO (MUY MODIFICADA) ---
 function setupGame() {
-currentPlayerIndex = 0;
-impostorIndices = [];
+    currentPlayerIndex = 0;
+    impostorIndices = [];
+    wordForPlayers = "";
+    wordForImpostor = "";
+    currentRoundType = "normal"; // Resetea el tipo de ronda
+    stopAlarm(); // Asegura que la alarma esté apagada al inicio
+    
+    // 1. Elegir la lista de palabras
+    let wordList;
+    if (selectedCategory === 'random') {
+        const allLists = Object.values(allWordLists);
+        wordList = allLists[Math.floor(Math.random() * allLists.length)];
+    } else {
+        wordList = allWordLists[selectedCategory];
+    }
 
-// 1. Elegir la lista de palabras
-let wordList;
-// Dentro de la función setupGame():
+    // 2. Verificar Rondas Especiales
+    // (Probabilidad del 25% si está habilitado)
+    if (enableSpecialRounds && Math.random() < 0.25) {
+        const specialType = Math.floor(Math.random() * 4);
+        
+        switch (specialType) {
+            case 0: // Todos impostores
+                currentRoundType = "Todos Impostores";
+                impostorIndices = Array.from({length: playerCount}, (_, i) => i);
+                wordForImpostor = "IMPOSTOR";
+                wordForPlayers = "IMPOSTOR"; // Técnicamente no se usa
+                break;
+            case 1: // Nadie es impostor
+                currentRoundType = "Nadie es Impostor";
+                impostorIndices = [];
+                wordForPlayers = wordList[Math.floor(Math.random() * wordList.length)];
+                break;
+            case 2: // Todos menos uno impostor
+                currentRoundType = "Todos menos uno Impostor";
+                const luckyPlayer = Math.floor(Math.random() * playerCount);
+                impostorIndices = Array.from({length: playerCount}, (_, i) => i).filter(i => i !== luckyPlayer);
+                wordForPlayers = wordList[Math.floor(Math.random() * wordList.length)];
+                wordForImpostor = "IMPOSTOR";
+                break;
+            case 4: // Todos con palabra distinta
+            default: // Caso de respaldo
+                currentRoundType = "Todos con palabra distinta";
+                impostorIndices = []; // No hay impostores, solo caos
+                // La palabra se asignará en la pantalla de "mostrar palabra"
+                break;
+        }
+    } else {
+        // 3. Lógica de Ronda Normal (incluye "Impostor Sabe")
+        currentRoundType = "normal";
+        
+        // 3a. Elegir palabra para jugadores
+        const playerWordIndex = Math.floor(Math.random() * wordList.length);
+        wordForPlayers = wordList[playerWordIndex];
 
-if (selectedCategory === 'players') {
-wordList = playersList;
-} else if (selectedCategory === 'clubs') {
-wordList = clubsList;
-} else if (selectedCategory === 'clashroyale') { // <--- LÓGICA EXISTENTE
-wordList = clashRoyaleList;
-} else if (selectedCategory === 'f1Pilots') { // <--- LÓGICA EXISTENTE
-wordList = f1PilotsList;
-} else if (selectedCategory === 'alumnos3ro') { // <--- NUEVA LÓGICA
-wordList = alumnos3roList;
-} else if (selectedCategory === 'genteColegio') { // <--- NUEVA LÓGICA
-wordList = genteColegioList;
-} else if (selectedCategory === 'profes') { // <--- NUEVA LÓGICA
-wordList = profesList;
-} else if (selectedCategory === 'cosasCotidianas') { // <--- NUEVA LÓGICA
-wordList = cosasCotidianasList;
-} else { // 'random'
-// El 'random' ahora elige entre TODAS las listas disponibles
-const lists = [
-playersList, clubsList, clashRoyaleList, f1PilotsList,
-alumnos3roList, genteColegioList, profesList, cosasCotidianasList
-];
-wordList = lists[Math.floor(Math.random() * lists.length)];
+        // 3b. Elegir palabra para impostor (si no sabe)
+        if (!impostorKnows) {
+            let impostorWordIndex = Math.floor(Math.random() * wordList.length);
+            // Asegurarse de que sea una palabra DIFERENTE
+            while (impostorWordIndex === playerWordIndex) {
+                impostorWordIndex = Math.floor(Math.random() * wordList.length);
+            }
+            wordForImpostor = wordList[impostorWordIndex];
+        } else {
+            wordForImpostor = "IMPOSTOR"; // Si el impostor SÍ sabe
+        }
+
+        // 3c. Asignar los impostores
+        const availablePlayerIndices = Array.from({length: playerCount}, (_, i) => i);
+        while (impostorIndices.length < impostorCount) {
+            const impostorIndex = availablePlayerIndices.splice(Math.floor(Math.random() * availablePlayerIndices.length), 1)[0];
+            impostorIndices.push(impostorIndex);
+        }
+    }
 }
 
-// 2. Elegir la palabra para los jugadores
-const randomIndex = Math.floor(Math.random() * wordList.length);
-wordForPlayers = wordList[randomIndex];
-
-// 3. Asignar los impostores
-const availablePlayerIndices = Array.from({length: playerCount}, (_, i) => i);
-while (impostorIndices.length < impostorCount) {
-const impostorIndex = availablePlayerIndices.splice(Math.floor(Math.random() * availablePlayerIndices.length), 1)[0];
-impostorIndices.push(impostorIndex);
-}
-}
 
 function updateWordScreenUI() {
-// Muestra SOLO el nombre del jugador actual (cambio solicitado)
+// Muestra SOLO el nombre del jugador actual
 playerNameDisplayEl.textContent = playerNames[currentPlayerIndex];
 // Restablece la pantalla para mostrar la palabra
 wordDisplayEl.textContent = "";
@@ -730,12 +857,30 @@ categorySelector.addEventListener('change', (e) => {
 selectedCategory = e.target.value;
 });
 
+// NUEVO: Listeners para los checkboxes
+specialRoundsCheck.addEventListener('change', (e) => {
+    enableSpecialRounds = e.target.checked;
+});
+
+impostorKnowsCheck.addEventListener('change', (e) => {
+    impostorKnows = e.target.checked;
+});
+
+
 // Botón Iniciar Partida (Configuración)
 startRoundBtn.addEventListener('click', () => {
-if (playerCount <= impostorCount) {
-showMessage("La cantidad de jugadores debe ser mayor que la de impostores.");
-return;
+// Validaciones
+if (impostorCount > 0 && (currentRoundType === "normal" || currentRoundType === "todosMenosUno")) {
+    if (playerCount <= impostorCount) {
+        showMessage("La cantidad de jugadores debe ser mayor que la de impostores.");
+        return;
+    }
 }
+if (playerCount < 3) {
+    showMessage("Debe haber al menos 3 jugadores.");
+    return;
+}
+
 // Recoger los nombres por última vez
 document.querySelectorAll('.player-name-input').forEach((input, index) => {
 playerNames[index] = input.value.trim() || `Jugador ${index + 1}`;
@@ -745,69 +890,121 @@ setupGame();
 updateWordScreenUI();
 showScreen(wordScreen);
 });
-// Botón Mostrar Palabra
+
+// Botón Mostrar Palabra (LÓGICA MUY MODIFICADA)
 showWordBtn.addEventListener('click', () => {
-const isImpostor = impostorIndices.includes(currentPlayerIndex);
-if (isImpostor) {
-wordDisplayEl.textContent = "IMPOSTOR";
-wordDisplayEl.classList.add('impostor-text');
-// Se eliminó playSound('impostor');
-} else {
-wordDisplayEl.textContent = wordForPlayers;
-wordDisplayEl.classList.remove('impostor-text');
-// Se eliminó playSound('success');
-}
-wordDisplayEl.classList.remove('hidden');
-showWordBtn.classList.add('hidden');
+    const isImpostor = impostorIndices.includes(currentPlayerIndex);
+    
+    // Resetea estilos y alarma
+    wordDisplayEl.classList.remove('impostor-text');
+    stopAlarm();
+
+    // Caso 1: Ronda "Todos con palabra distinta"
+    if (currentRoundType === "Todos con palabra distinta") {
+        let wordList; // Obtener la lista de palabras de nuevo
+        if (selectedCategory === 'random') {
+            const allLists = Object.values(allWordLists);
+            wordList = allLists[Math.floor(Math.random() * allLists.length)];
+        } else {
+            wordList = allWordLists[selectedCategory];
+        }
+        wordDisplayEl.textContent = wordList[Math.floor(Math.random() * wordList.length)];
+    
+    // Caso 2: El jugador es Impostor
+    } else if (isImpostor) {
+        wordDisplayEl.textContent = wordForImpostor; // "IMPOSTOR" o palabra distinta
+        wordDisplayEl.classList.add('impostor-text');
+        
+        // ¡Activar alarma si las rondas especiales están habilitadas!
+        
+    // Caso 3: El jugador NO es Impostor (y no es ronda de "todos distintos")
+    } else {
+        wordDisplayEl.textContent = wordForPlayers;
+    }
+
+    wordDisplayEl.classList.remove('hidden');
+    showWordBtn.classList.add('hidden');
 });
+
 // Botón Siguiente Jugador / Finalizar Ronda
 nextPlayerBtn.addEventListener('click', () => {
-if (currentPlayerIndex < playerCount - 1) {
-currentPlayerIndex++;
-updateWordScreenUI();
-} else {
-// Último jugador vio su palabra
-endMessageInitialEl.classList.remove('hidden');
-impostorRevealBtn.classList.remove('hidden');
-revealArea.classList.add('hidden');
-showScreen(endScreen);
-}
+    stopAlarm(); // Detener alarma al pasar al siguiente jugador
+    
+    if (currentPlayerIndex < playerCount - 1) {
+        currentPlayerIndex++;
+        updateWordScreenUI();
+    } else {
+        // Último jugador vio su palabra
+        endMessageInitialEl.classList.remove('hidden');
+        impostorRevealBtn.classList.remove('hidden');
+        revealArea.classList.add('hidden');
+        specialRoundInfoEl.classList.add('hidden'); // Oculta info de ronda anterior
+        showScreen(endScreen);
+    }
 });
 
 // Botón Revelar Impostores
 impostorRevealBtn.addEventListener('click', () => {
-// Se eliminó playSound('impostor');
-// Oculta el botón de revelación
-impostorRevealBtn.classList.add('hidden');
-endMessageInitialEl.classList.add('hidden');
-// Muestra el área de revelación
-revealArea.classList.remove('hidden');
-impostorListEl.innerHTML = '';
-// Genera la lista de nombres de impostores
-impostorIndices.forEach(index => {
-const li = document.createElement('li');
-li.textContent = playerNames[index];
-impostorListEl.appendChild(li);
-});
+    stopAlarm(); // Detener alarma por si acaso
+
+    // Oculta el botón de revelación
+    impostorRevealBtn.classList.add('hidden');
+    endMessageInitialEl.classList.add('hidden');
+    
+    // Muestra el área de revelación
+    revealArea.classList.remove('hidden');
+    impostorListEl.innerHTML = '';
+
+    // NUEVO: Mostrar info de ronda especial
+    if (currentRoundType !== "normal") {
+        let specialText = `¡Ronda Especial: ${currentRoundType}!`;
+        if (currentRoundType === "Nadie es Impostor") {
+            specialText += " Todos tenían la palabra.";
+        } else if (currentRoundType === "Todos con palabra distinta") {
+            specialText += " Cada uno vio algo diferente.";
+        }
+        specialRoundInfoEl.textContent = specialText;
+        specialRoundInfoEl.classList.remove('hidden');
+    } else {
+        specialRoundInfoEl.classList.add('hidden');
+    }
+
+    // Genera la lista de nombres de impostores
+    if (impostorIndices.length > 0) {
+        endMessageFinal.textContent = "Los impostores eran:";
+        impostorIndices.forEach(index => {
+            const li = document.createElement('li');
+            li.textContent = playerNames[index];
+            impostorListEl.appendChild(li);
+        });
+    } else {
+        endMessageFinal.textContent = "¡No había impostores esta ronda!";
+    }
 });
 
 // Botón Jugar de Nuevo
 playAgainBtn.addEventListener('click', () => {
-setupGame(); // Nueva ronda con la misma configuración
-updateWordScreenUI();
-showScreen(wordScreen);
+    stopAlarm();
+    setupGame(); // Nueva ronda con la misma configuración
+    updateWordScreenUI();
+    showScreen(wordScreen);
 });
 
 // Botón Cambiar Ajustes
 changeSettingsBtn.addEventListener('click', () => {
-renderPlayerNameInputs(); // Vuelve a cargar los inputs de nombre
-showScreen(configScreen);
+    stopAlarm();
+    renderPlayerNameInputs(); // Vuelve a cargar los inputs de nombre
+    showScreen(configScreen);
 });
 
 // --- INICIALIZACIÓN ---
 document.addEventListener('DOMContentLoaded', () => {
-showScreen(startScreen);
-renderPlayerNameInputs(); // Inicializa los inputs de nombre
+    // Cargar estado inicial de los checkboxes
+    enableSpecialRounds = specialRoundsCheck.checked;
+    impostorKnows = impostorKnowsCheck.checked;
+
+    showScreen(startScreen);
+    renderPlayerNameInputs(); // Inicializa los inputs de nombre
 });
 
 </script>
