@@ -96,6 +96,23 @@ max-height: 80vh;
 overflow-y: auto;
 }
 
+/* CSS para que el scroll sea más discreto */
+.screen::-webkit-scrollbar {
+width: 8px;
+}
+.screen::-webkit-scrollbar-track {
+background: #f1f1f1;
+border-radius: 10px;
+}
+.screen::-webkit-scrollbar-thumb {
+background: #ccc;
+border-radius: 10px;
+}
+.screen::-webkit-scrollbar-thumb:hover {
+background: #aaa;
+}
+
+
 .screen.active {
 display: flex;
 opacity: 1;
@@ -126,6 +143,15 @@ transform: translateY(-3px);
 box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 background-image: linear-gradient(to right, #0060c0 0%, var(--color-primary) 100%);
 }
+
+.btn:disabled {
+background: #999;
+cursor: not-allowed;
+transform: none;
+box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+background-image: none;
+}
+
 
 .btn.secondary {
 background: var(--color-secondary);
@@ -159,7 +185,6 @@ font-family: var(--font-secondary);
 font-size: 1.2rem;
 font-weight: 700;
 color: var(--color-text-dark);
-/* width: 150px; */ /* Ajustado para checkboxes */
 }
 
 .option-value {
@@ -182,17 +207,8 @@ transform: scale(1.2);
 color: var(--color-accent);
 }
 
-/* Estilos para nombres de jugadores */
-#player-names-container {
-width: 100%;
-display: flex;
-flex-direction: column;
-gap: 10px;
-margin-top: 10px;
-/* Se oculta por defecto */
-}
-
-.player-name-input {
+/* Estilos para inputs */
+.input-field {
 width: 100%;
 padding: 10px;
 border: 2px solid var(--color-secondary);
@@ -200,14 +216,17 @@ border-radius: 8px;
 font-size: 1rem;
 text-align: center;
 transition: border-color 0.2s;
+box-sizing: border-box;
+max-width: 300px;
 }
 
-.player-name-input:focus {
+.input-field:focus {
 outline: none;
 border-color: var(--color-primary);
 }
+
 /* Estilos para el selector de categoría */
-#category-selector {
+#category-selector, #lobby-category-selector {
 width: 100%;
 padding: 10px;
 border: 2px solid var(--color-primary);
@@ -216,9 +235,10 @@ font-size: 1.1rem;
 background-color: #f8f8f8;
 font-family: var(--font-secondary);
 cursor: pointer;
+max-width: 300px;
 }
 
-/* NUEVO: Estilos para grupo de checkboxes */
+/* Estilos para grupo de checkboxes */
 .checkbox-group {
 display: flex;
 flex-direction: column;
@@ -228,6 +248,8 @@ padding: 10px 20px;
 text-align: left;
 width: 100%;
 box-sizing: border-box;
+max-width: 300px;
+margin: 0 auto;
 }
 .checkbox-group div {
 display: flex;
@@ -326,28 +348,188 @@ margin-top: 10px;
 font-size: 1.2rem;
 color: var(--color-text-dark);
 }
-/* NUEVO: Info de ronda especial */
+/* Info de ronda especial */
 #special-round-info {
 font-size: 1.3rem;
 font-weight: bold;
 color: var(--color-primary);
 margin-top: 10px;
 }
+
+/* --- NUEVOS ESTILOS PARA ONLINE --- */
+#lobby-room-code {
+font-family: var(--font-main);
+font-size: 3rem;
+color: var(--color-primary);
+background: #f0f0f0;
+padding: 10px 20px;
+border-radius: 10px;
+letter-spacing: 3px;
+border: 2px dashed var(--color-secondary);
+}
+
+#lobby-player-list {
+list-style: none;
+padding: 0;
+margin-top: 15px;
+width: 100%;
+max-width: 300px;
+}
+
+#lobby-player-list li {
+font-family: var(--font-secondary);
+font-size: 1.2rem;
+padding: 8px;
+background: #f9f9f9;
+border-radius: 5px;
+margin-bottom: 5px;
+border: 1px solid #eee;
+}
+
+#lobby-player-list li .fa-crown {
+color: var(--color-accent);
+margin-right: 10px;
+}
+
+.lobby-config-view {
+text-align: left;
+padding: 10px 20px;
+background: #f0f0f0;
+border-radius: 10px;
+border: 1px solid #ddd;
+width: 100%;
+max-width: 350px;
+box-sizing: border-box;
+}
+.lobby-config-view p {
+font-family: var(--font-secondary);
+font-size: 1.1rem;
+margin: 8px 0;
+}
+.lobby-config-view span {
+font-weight: bold;
+color: var(--color-primary);
+}
 </style>
 </head>
 <body>
+
+<!-- INICIO: Imports de Firebase (Requerido) -->
+<script type="module">
+    // Importar funciones de Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, deleteDoc, arrayUnion, arrayRemove, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+
+    // Poner las funciones en el scope global para que el script de abajo las vea
+    window.firebase = {
+        initializeApp,
+        getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged,
+        getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, deleteDoc, arrayUnion, arrayRemove, runTransaction, serverTimestamp,
+        setLogLevel
+    };
+</script>
+<!-- FIN: Imports de Firebase -->
+
 
 <div class="container">
 <!-- Pantalla de inicio -->
 <div id="start-screen" class="screen active">
 <h1>Impostor Fútbol</h1>
 <p>Descubre el impostor entre tus amigos. ¡Que comience el partido!</p>
-<button id="start-game-btn" class="btn">Iniciar Partida</button>
+<button id="start-game-btn" class="btn">Iniciar Partida Local</button>
+<!-- NUEVO: Botón Online -->
+<button id="online-game-btn" class="btn secondary">Sala Online</button>
 </div>
 
-<!-- Pantalla de configuración -->
+<!-- NUEVO: Pantalla de Menú Online -->
+<div id="online-menu-screen" class="screen">
+<h2>Sala Online</h2>
+<p>Introduce tu nombre para jugar online.</p>
+<input type="text" id="player-name-input-online" class="input-field" placeholder="Tu Nombre">
+<button id="create-room-btn" class="btn">Crear Sala</button>
+<button id="join-room-menu-btn" class="btn secondary">Unirse a Sala</button>
+<button id="back-to-start-btn" class="btn secondary small-btn">Volver</button>
+</div>
+
+<!-- NUEVO: Pantalla de Unirse a Sala -->
+<div id="join-room-screen" class="screen">
+<h2>Unirse a Sala</h2>
+<p>Introduce el código de 6 letras de la sala.</p>
+<input type="text" id="room-code-input" class="input-field" placeholder="LERP0W" maxlength="6" style="text-transform: uppercase;">
+<button id="submit-join-btn" class="btn">Unirse</button>
+<button id="back-to-online-menu-btn" class="btn secondary small-btn">Volver</button>
+</div>
+
+<!-- NUEVO: Pantalla de Lobby (Sala de Espera) -->
+<div id="lobby-screen" class="screen">
+<h2>Sala de Espera</h2>
+<p>Código de la Sala:</p>
+<div id="lobby-room-code">Cargando...</div>
+<h3>Jugadores:</h3>
+<ul id="lobby-player-list">
+<!-- Jugadores se añaden aquí dinámicamente -->
+</ul>
+
+<!-- Controles del Host -->
+<div id="lobby-host-controls" class="hidden">
+<h3>Configuración (Host)</h3>
+<div class="option-group">
+<div class="count-controls">
+<button class="arrow-btn" id="lobby-impostors-minus" aria-label="Disminuir impostores"><i class="fas fa-arrow-left"></i></button>
+<div>
+<div class="option-label">Impostores</div>
+<div class="option-value" id="lobby-impostor-count-display">1</div>
+</div>
+<button class="arrow-btn" id="lobby-impostors-plus" aria-label="Aumentar impostores"><i class="fas fa-arrow-right"></i></button>
+</div>
+</div>
+<div class="option-group">
+<div class="option-label">Tema</div>
+<select id="lobby-category-selector">
+<option value="players">Jugadores de Fútbol</option>
+<option value="clubs">Clubes de Fútbol</option>
+<option value="clashroyale">Cartas de Clash Royale</option>
+<option value="f1Pilots">Pilotos de F1</option>
+<option value="alumnos3ro">Alumnos 3ro</option>
+<option value="genteColegio">Gente del Colegio</option>
+<option value="profes">Profesores</option>
+<option value="cosasCotidianas">Cosas Cotidianas</option>
+<option value="random">Al Azar</option>
+</select>
+</div>
+<div class="option-group checkbox-group">
+<div>
+<input type="checkbox" id="lobby-special-rounds-check">
+<label for="lobby-special-rounds-check">Rondas Especiales</label>
+</div>
+<div>
+<input type="checkbox" id="lobby-impostor-knows-check" checked>
+<label for="lobby-impostor-knows-check">Impostor Sabe</label>
+</div>
+</div>
+<button id="lobby-start-game-btn" class="btn">Iniciar Partida</button>
+</div>
+
+<!-- Vista para Invitados -->
+<div id="lobby-joiner-view" class="hidden">
+<h3>Configuración (Host):</h3>
+<div class="lobby-config-view">
+<p>Impostores: <span id="view-impostor-count">1</span></p>
+<p>Categoría: <span id="view-category">Jugadores de Fútbol</span></p>
+<p>Rondas Especiales: <span id="view-special-rounds">No</span></p>
+<p>Impostor Sabe: <span id="view-impostor-knows">Sí</span></p>
+</div>
+<p><i>Esperando a que el host inicie la partida...</i></p>
+</div>
+<button id="lobby-leave-btn" class="btn secondary small-btn">Salir de la Sala</button>
+</div>
+
+
+<!-- Pantalla de configuración (Local) -->
 <div id="config-screen" class="screen">
-<h2>Configuración</h2>
+<h2>Configuración (Local)</h2>
 <!-- Cantidad de jugadores -->
 <div class="option-group">
 <div class="count-controls">
@@ -358,10 +540,7 @@ margin-top: 10px;
 </div>
 <button class="arrow-btn" id="players-plus" aria-label="Aumentar jugadores"><i class="fas fa-arrow-right"></i></button>
 </div>
-<!-- Botón para alternar la visión de los inputs de nombre -->
 <button id="toggle-names-btn" class="btn secondary small-btn">Cambiar nombres de jugadores</button>
-
-<!-- Inputs de nombre de jugadores se inyectan aquí. Ocultos por defecto. -->
 <div id="player-names-container" class="hidden">
 </div>
 </div>
@@ -376,7 +555,6 @@ margin-top: 10px;
 <button class="arrow-btn" id="impostors-plus" aria-label="Aumentar impostores"><i class="fas fa-arrow-right"></i></button>
 </div>
 </div>
-
 <!-- Selector de categoría -->
 <div class="option-group">
 <div class="option-label">Tema de la Palabra</div>
@@ -392,8 +570,7 @@ margin-top: 10px;
 <option value="random">Al Azar</option>
 </select>
 </div>
-
-<!-- NUEVO: Opciones de Juego -->
+<!-- Opciones de Juego -->
 <div class="option-group checkbox-group">
 <div>
 <input type="checkbox" id="special-rounds-check">
@@ -404,9 +581,8 @@ margin-top: 10px;
 <label for="impostor-knows-check">El impostor sabe que es impostor</label>
 </div>
 </div>
-<!-- FIN DE NUEVAS OPCIONES -->
-
 <button id="start-round-btn" class="btn">Iniciar Partida</button>
+<button id="back-to-start-btn-local" class="btn secondary small-btn">Volver</button>
 </div>
 
 <!-- Pantalla de juego (mostrar palabra) -->
@@ -424,7 +600,7 @@ margin-top: 10px;
 <p id="end-message-initial">Ahora es momento de discutir y votar. ¿Quién te pareció el más sospechoso?</p>
 <button id="impostor-reveal-btn" class="btn">Revelar Impostores</button>
 <div id="reveal-area" class="hidden">
-<p id="special-round-info" class="hidden"></p> <!-- NUEVO: Para info de ronda especial -->
+<p id="special-round-info" class="hidden"></p>
 <p id="end-message-final">Los impostores eran:</p>
 <ul id="impostor-list"></ul>
 </div>
@@ -442,12 +618,18 @@ margin-top: 10px;
 </div>
 </div>
 
-<!-- NUEVO: Audio de alarma (debe estar fuera del container) -->
-<!-- CAMBIA EL SRC por tu enlace de audio -->
+<!-- Audio de alarma (debe estar fuera del container) -->
 <audio id="alarm-sound" src="placeholder_alarm.mp3" loop preload="auto"></audio>
 
 
-<script>
+<script type="module">
+// --- Firebase (globales) ---
+// Estas variables se llenarán con la inicialización de Firebase
+let db, auth, userId, userName, appId, roomsPath;
+let currentRoomId = null;
+let isHost = false;
+let roomUnsubscribe = null; // Para detener el listener de Firestore
+
 // --- BASE DE DATOS DE PALABRAS ---
 const playersList = [
 "Lionel Messi", "Cristiano Ronaldo", "Diego Maradona", "Pelé", "Zinedine Zidane",
@@ -498,8 +680,6 @@ const clubsList = [
 "Valencia CF", "Sevilla FC", "Real Betis", "Tottenham Hotspur", "Leicester City",
 "West Ham United", "Everton FC", "Bayer Leverkusen", "RB Leipzig", "Schalke 04"
 ];
-
-// --- NUEVA CATEGORÍA: CARTAS DE CLASH ROYALE ---
 const clashRoyaleList = [
 "Gigante Eléctrico", "Montapuercos", "P.E.K.K.A", "Mago Eléctrico", "Mini P.E.K.K.A",
 "Príncipe", "Princesa", "Caballero", "Valquiria", "Bruja",
@@ -514,7 +694,6 @@ const clashRoyaleList = [
 "Barril de Duendes", "Barril de Esqueletos", "Globo", "Minero", "Puerco Gigante",
 "Curandera Guerrera", "Torre Tesla", "Choza de Bárbaros", "Torre Bombardera", "Rey Esqueleto"
 ];
-// 4. FÓRMULA 1 - PILOTOS (NUEVA CATEGORÍA)
 const f1PilotsList = [
 "Max Verstappen", "Lewis Hamilton", "Charles Leclerc", "Lando Norris", "Fernando Alonso",
 "Sergio Pérez", "George Russell", "Carlos Sainz", "Oscar Piastri", "Daniel Ricciardo",
@@ -523,10 +702,6 @@ const f1PilotsList = [
 "Valtteri Bottas", "Esteban Ocon", "Pierre Gasly", "Yuki Tsunoda", "Lance Stroll",
 "Alexander Albon", "Kevin Magnussen", "Nico Hülkenberg", "Zhou Guanyu", "Logan Sargeant", "Jack Doohan"
 ];
-
-// --- INICIO DE NUEVAS CATEGORÍAS ---
-
-// 5. ALUMNOS 3RO
 const alumnos3roList = [
 "Bauti", "Beltina", "Bernardita", "Guada Molina", "Simon Carranza", "Emma Llugdar", 
 "Emma Carabajal", "Fabri", "Felipon", "Fran", "Gae", "Guada Elias", "Jana", "Jazmin", 
@@ -534,8 +709,6 @@ const alumnos3roList = [
 "Santi Hiller", "Nika", "Julia", "Olivia", "Pedro", "Santino", "Simon Abbadie", 
 "Sofia", "Thiago Michiels", "Valentina", "Victoria"
 ];
-
-// 6. GENTE DEL COLEGIO
 const genteColegioList = [
 "Bauti", "Beltina", "Bernardita", "Guada Molina", "Simon Carranza", "Emma Llugdar", 
 "Emma Carabajal", "Fabri", "Felipon", "Fran", "Gae", "Guada Elias", "Jana", "Jazmin", 
@@ -555,8 +728,6 @@ const genteColegioList = [
 "Milo", "Manuel Saucedo", "Julia Franchini", "Alma (Bolivar)", "Lucas (Preceptor)", 
 "Giuli (Preceptora)", "Noe (Preceptora)", "Isis (Preceptora)", "Agucho (Recepción)"
 ];
-
-// 7. PROFESORES
 const profesList = [
 "La suplente de PDL", "Diana Justel (Profe de Ingles)", "Mara Camba (Profe de Ingles)", 
 "Cintia Milano (Profe de Plastica)", "Vicky Lasarte (Profe de Matematica)", 
@@ -568,8 +739,6 @@ const profesList = [
 "Carmen (Profe de Teatro y Ciudadania)", "Rocio Maldini (Profe de Fisico-Quimica)", 
 "Tic (Profe de Tecnologia)", "Lucia di Gregori (Profe de Ingles 1ro)", "Pedro (Suplente Matematica)"
 ];
-
-// 8. COSAS COTIDIANAS
 const cosasCotidianasList = [
 "Lápiz", "Goma de borrar", "Cuaderno", "Pizarrón", "Tiza", "Marcador", "Mochila", 
 "Cartuchera", "Silla", "Mesa", "Computadora", "Celular", "Llaves", "Vaso", "Plato", 
@@ -578,9 +747,6 @@ const cosasCotidianasList = [
 "Libro", "Sofá", "Televisor", "Auto", "Bicicleta", "Colectivo", "Semáforo", "Árbol", 
 "Pasto", "Nube", "Sol", "Luna", "Cepillo de dientes", "Ducha", "Jabón", "Shampoo"
 ];
-
-// --- FIN DE NUEVAS CATEGORÍAS ---
-
 // Listas de palabras unificadas para acceso global
 const allWordLists = {
     players: playersList,
@@ -593,58 +759,99 @@ const allWordLists = {
     cosasCotidianas: cosasCotidianasList
 };
 
-
-// --- VARIABLES DE ESTADO ---
+// --- VARIABLES DE ESTADO (JUEGO LOCAL) ---
 let playerCount = 3;
 let impostorCount = 1;
-let playerNames = ["Jugador 1", "Jugador 2", "Jugador 3"]; // Inicialmente 3
+let playerNames = ["Jugador 1", "Jugador 2", "Jugador 3"]; // Nombres para el juego (local o sincronizado)
 let impostorIndices = [];
 let wordForPlayers = "";
-let wordForImpostor = ""; // NUEVO: Para la palabra del impostor si no sabe
+let wordForImpostor = "";
 let currentPlayerIndex = 0;
 let selectedCategory = "players";
-// NUEVAS variables de estado
 let enableSpecialRounds = false;
 let impostorKnows = true;
-let currentRoundType = "normal"; // "normal", "todosImpostores", "nadieImpostor", "todosMenosUno", "todosDistintos"
+let currentRoundType = "normal";
 
-// --- REFERENCIAS DEL DOM ---
+// --- REFERENCIAS DEL DOM (Pantallas) ---
 const startScreen = document.getElementById('start-screen');
 const configScreen = document.getElementById('config-screen');
 const wordScreen = document.getElementById('word-screen');
 const endScreen = document.getElementById('end-screen');
+const messageModal = document.getElementById('message-modal');
+// Nuevas pantallas online
+const onlineMenuScreen = document.getElementById('online-menu-screen');
+const joinRoomScreen = document.getElementById('join-room-screen');
+const lobbyScreen = document.getElementById('lobby-screen');
 
+// --- REFERENCIAS DEL DOM (Botones Inicio) ---
 const startGameBtn = document.getElementById('start-game-btn');
+const onlineGameBtn = document.getElementById('online-game-btn');
+const backToStartBtn = document.getElementById('back-to-start-btn');
+const backToStartBtnLocal = document.getElementById('back-to-start-btn-local');
+
+// --- REFERENCIAS DEL DOM (Menú Online) ---
+const playerNameInputOnline = document.getElementById('player-name-input-online');
+const createRoomBtn = document.getElementById('create-room-btn');
+const joinRoomMenuBtn = document.getElementById('join-room-menu-btn');
+const roomCodeInput = document.getElementById('room-code-input');
+const submitJoinBtn = document.getElementById('submit-join-btn');
+const backToOnlineMenuBtn = document.getElementById('back-to-online-menu-btn');
+
+// --- REFERENCIAS DEL DOM (Lobby) ---
+const lobbyRoomCode = document.getElementById('lobby-room-code');
+const lobbyPlayerList = document.getElementById('lobby-player-list');
+const lobbyHostControls = document.getElementById('lobby-host-controls');
+const lobbyJoinerView = document.getElementById('lobby-joiner-view');
+const lobbyImpostorsMinus = document.getElementById('lobby-impostors-minus');
+const lobbyImpostorsPlus = document.getElementById('lobby-impostors-plus');
+const lobbyImpostorCountDisplay = document.getElementById('lobby-impostor-count-display');
+const lobbyCategorySelector = document.getElementById('lobby-category-selector');
+const lobbySpecialRoundsCheck = document.getElementById('lobby-special-rounds-check');
+const lobbyImpostorKnowsCheck = document.getElementById('lobby-impostor-knows-check');
+const lobbyStartGameBtn = document.getElementById('lobby-start-game-btn');
+const lobbyLeaveBtn = document.getElementById('lobby-leave-btn');
+// Vistas de solo lectura para invitados
+const viewImpostorCount = document.getElementById('view-impostor-count');
+const viewCategory = document.getElementById('view-category');
+const viewSpecialRounds = document.getElementById('view-special-rounds');
+const viewImpostorKnows = document.getElementById('view-impostor-knows');
+
+
+// --- REFERENCIAS DEL DOM (Config Local) ---
 const playersMinusBtn = document.getElementById('players-minus');
 const playersPlusBtn = document.getElementById('players-plus');
 const impostorsMinusBtn = document.getElementById('impostors-minus');
 const impostorsPlusBtn = document.getElementById('impostors-plus');
-const startRoundBtn = document.getElementById('start-round-btn');
-const showWordBtn = document.getElementById('show-word-btn');
-const nextPlayerBtn = document.getElementById('next-player-btn');
-const playAgainBtn = document.getElementById('play-again-btn');
-const changeSettingsBtn = document.getElementById('change-settings-btn');
-const impostorRevealBtn = document.getElementById('impostor-reveal-btn');
 const toggleNamesBtn = document.getElementById('toggle-names-btn');
 const playerCountEl = document.getElementById('player-count-display');
 const impostorCountEl = document.getElementById('impostor-count-display');
-const playerNameDisplayEl = document.getElementById('player-name-display');
-const wordDisplayEl = document.getElementById('word-display');
 const playerNamesContainer = document.getElementById('player-names-container');
 const categorySelector = document.getElementById('category-selector');
-const revealArea = document.getElementById('reveal-area');
-const impostorListEl = document.getElementById('impostor-list');
-const endMessageInitialEl = document.getElementById('end-message-initial');
-const specialRoundInfoEl = document.getElementById('special-round-info'); // NUEVO
-
-const messageModal = document.getElementById('message-modal');
-const modalText = document.getElementById('modal-text');
-const modalCloseBtn = document.getElementById('modal-close-btn');
-
-// NUEVAS referencias del DOM
 const specialRoundsCheck = document.getElementById('special-rounds-check');
 const impostorKnowsCheck = document.getElementById('impostor-knows-check');
+const startRoundBtn = document.getElementById('start-round-btn');
+
+// --- REFERENCIAS DEL DOM (Juego) ---
+const playerNameDisplayEl = document.getElementById('player-name-display');
+const wordDisplayEl = document.getElementById('word-display');
+const showWordBtn = document.getElementById('show-word-btn');
+const nextPlayerBtn = document.getElementById('next-player-btn');
+
+// --- REFERENCIAS DEL DOM (Final) ---
+const impostorRevealBtn = document.getElementById('impostor-reveal-btn');
+const revealArea = document.getElementById('reveal-area');
+const specialRoundInfoEl = document.getElementById('special-round-info');
+const endMessageInitialEl = document.getElementById('end-message-initial');
+const endMessageFinal = document.getElementById('end-message-final');
+const impostorListEl = document.getElementById('impostor-list');
+const playAgainBtn = document.getElementById('play-again-btn');
+const changeSettingsBtn = document.getElementById('change-settings-btn');
+
+// --- REFERENCIAS DEL DOM (Otros) ---
+const modalText = document.getElementById('modal-text');
+const modalCloseBtn = document.getElementById('modal-close-btn');
 const alarmSound = document.getElementById('alarm-sound');
+
 
 // --- FUNCIONES DE INTERFAZ ---
 function showMessage(message) {
@@ -662,7 +869,7 @@ s.classList.remove('active');
 screen.classList.add('active');
 }
 
-// NUEVO: Detener alarma (función de ayuda)
+// Detener alarma (función de ayuda)
 function stopAlarm() {
     document.body.classList.remove('impostor-alarm');
     alarmSound.pause();
@@ -671,52 +878,365 @@ function stopAlarm() {
     }
 }
 
-// --- LÓGICA DE CONFIGURACIÓN ---
-function renderPlayerNameInputs() {
-playerNamesContainer.innerHTML = '';
-// Asegura que playerNames tenga el tamaño correcto
-while (playerNames.length < playerCount) {
-playerNames.push(`Jugador ${playerNames.length + 1}`);
-}
-playerNames = playerNames.slice(0, playerCount);
+// --- FUNCIONES DE FIREBASE ---
+async function initFirebase() {
+    // Importar funciones de las variables globales
+    const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore, setLogLevel } = window.firebase;
 
-for (let i = 0; i < playerCount; i++) {
-const input = document.createElement('input');
-input.type = 'text';
-input.classList.add('player-name-input');
-input.placeholder = `Jugador ${i + 1}`;
-input.value = playerNames[i];
-input.dataset.index = i;
-input.addEventListener('input', (e) => {
-// Guarda el nombre en el array al escribir
-playerNames[i] = e.target.value.trim() || `Jugador ${i + 1}`;
-});
-playerNamesContainer.appendChild(input);
-}
-playerCountEl.textContent = playerCount;
-updateImpostorLimits();
+    // Usar variables globales de entorno (si existen)
+    const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+    appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+    // Fallback para pruebas locales si no hay config
+    if (!firebaseConfig.apiKey) {
+        console.warn("Firebase config no encontrada. Usando placeholders.");
+        // Aquí podrías poner una config de prueba, pero es mejor deshabilitar funciones online
+    }
+    
+    // Inicializar Firebase
+    const app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    auth = getAuth(app);
+    setLogLevel('Debug'); // Para ver logs de Firestore
+
+    // Definir la ruta de la base de datos
+    roomsPath = `/artifacts/${appId}/public/data/impostor_rooms`;
+
+    // Autenticar al usuario
+    try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+            await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+            await signInAnonymously(auth);
+        }
+    } catch (error) {
+        console.error("Error de autenticación:", error);
+        showMessage("Error al conectar con el servidor. El modo online no funcionará.");
+    }
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            userId = user.uid;
+            console.log("Usuario autenticado:", userId);
+        } else {
+            console.warn("Usuario no autenticado.");
+            userId = 'guest-' + Math.random().toString(36).substring(2, 9);
+        }
+    });
 }
 
-function updateImpostorLimits() {
-// No hay límite máximo de impostores, solo deben ser menos que los jugadores
-if (impostorCount >= playerCount) {
-impostorCount = playerCount - 1;
-}
-// Mínimo 1 impostor si hay jugadores (mínimo 3 jugadores)
-if (playerCount > 1 && impostorCount < 1) {
-impostorCount = 1;
-}
-impostorCountEl.textContent = impostorCount;
+function generateRoomCode() {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
-// --- LÓGICA DE ASIGNACIÓN DEL JUEGO (MUY MODIFICADA) ---
+// Función principal de escucha de la sala
+function listenToRoom(roomId) {
+    const { doc, onSnapshot } = window.firebase;
+    currentRoomId = roomId;
+    
+    // Si ya hay un listener, detenerlo
+    if (roomUnsubscribe) roomUnsubscribe();
+
+    const roomRef = doc(db, roomsPath, roomId);
+    roomUnsubscribe = onSnapshot(roomRef, (docSnap) => {
+        if (!docSnap.exists()) {
+            showMessage("La sala ha sido cerrada por el host.");
+            leaveRoom();
+            return;
+        }
+
+        const roomData = docSnap.data();
+        
+        // Sincronizar UI del Lobby
+        if (lobbyScreen.classList.contains('active')) {
+            lobbyRoomCode.textContent = roomId;
+            lobbyPlayerList.innerHTML = '';
+            roomData.players.forEach(player => {
+                const li = document.createElement('li');
+                li.textContent = player.name;
+                if (player.userId === roomData.hostId) {
+                    const icon = document.createElement('i');
+                    icon.className = 'fas fa-crown';
+                    li.prepend(icon);
+                }
+                lobbyPlayerList.appendChild(li);
+            });
+
+            // Mostrar controles de host o vista de invitado
+            lobbyHostControls.style.display = isHost ? 'block' : 'none';
+            lobbyJoinerView.style.display = isHost ? 'none' : 'block';
+
+            // Actualizar vista de invitado
+            if (!isHost) {
+                viewImpostorCount.textContent = roomData.config.impostorCount;
+                const categoryOption = lobbyCategorySelector.querySelector(`option[value="${roomData.config.category}"]`);
+                viewCategory.textContent = categoryOption ? categoryOption.text : roomData.config.category;
+                viewSpecialRounds.textContent = roomData.config.specialRounds ? 'Sí' : 'No';
+                viewImpostorKnows.textContent = roomData.config.impostorKnows ? 'Sí' : 'No';
+            }
+            
+            // Habilitar/deshabilitar botón de empezar
+            lobbyStartGameBtn.disabled = roomData.players.length < 3;
+        }
+        
+        // Sincronizar inicio del juego
+        // Si el estado es "playing" y *no* estamos ya en la pantalla de juego
+        if (roomData.gameState.status === 'playing' && !wordScreen.classList.contains('active')) {
+            console.log("Iniciando juego desde Firestore...");
+            // Cargar estado del juego desde Firestore a las variables locales
+            const gs = roomData.gameState;
+            wordForPlayers = gs.wordForPlayers;
+            wordForImpostor = gs.wordForImpostor;
+            impostorIndices = gs.impostorIndices;
+            currentRoundType = gs.currentRoundType;
+            
+            // Cargar jugadores desde el lobby
+            playerNames = roomData.players.map(p => p.name);
+            playerCount = playerNames.length;
+            
+            // Configuración
+            impostorCount = roomData.config.impostorCount;
+            selectedCategory = roomData.config.category;
+            enableSpecialRounds = roomData.config.specialRounds;
+            impostorKnows = roomData.config.impostorKnows;
+            
+            currentPlayerIndex = 0; // Siempre empieza el primero
+            updateWordScreenUI();
+            showScreen(wordScreen);
+        }
+        
+        // Sincronizar vuelta al lobby
+        if (roomData.gameState.status === 'lobby' && !lobbyScreen.classList.contains('active')) {
+             console.log("Volviendo al lobby...");
+             stopAlarm();
+             showScreen(lobbyScreen);
+        }
+    });
+}
+
+// Crear una sala (Host)
+async function handleCreateRoom() {
+    const { setDoc, doc, serverTimestamp } = window.firebase;
+    
+    userName = playerNameInputOnline.value.trim() || `Jugador ${userId.substring(0, 4)}`;
+    if (!userName) {
+        showMessage("Por favor, introduce un nombre.");
+        return;
+    }
+    
+    const roomId = generateRoomCode();
+    isHost = true;
+    
+    // Configuración inicial (la que está en los controles del lobby por defecto)
+    const initialConfig = {
+        impostorCount: 1,
+        category: 'players',
+        specialRounds: false,
+        impostorKnows: true
+    };
+    
+    const roomData = {
+        hostId: userId,
+        players: [{ userId: userId, name: userName }],
+        config: initialConfig,
+        gameState: { status: 'lobby' },
+        createdAt: serverTimestamp() // Opcional, para limpiar salas viejas
+    };
+    
+    try {
+        const roomRef = doc(db, roomsPath, roomId);
+        await setDoc(roomRef, roomData);
+        listenToRoom(roomId);
+        showScreen(lobbyScreen);
+    } catch (error) {
+        console.error("Error al crear la sala:", error);
+        showMessage("Error al crear la sala. Inténtalo de nuevo.");
+    }
+}
+
+// Unirse a una sala (Invitado)
+async function handleJoinRoom() {
+    const { doc, getDoc, updateDoc, arrayUnion } = window.firebase;
+    
+    userName = playerNameInputOnline.value.trim() || `Jugador ${userId.substring(0, 4)}`;
+    if (!userName) {
+        showMessage("Por favor, introduce un nombre en el menú anterior.");
+        showScreen(onlineMenuScreen);
+        return;
+    }
+    
+    const roomId = roomCodeInput.value.toUpperCase();
+    if (roomId.length !== 6) {
+        showMessage("El código debe tener 6 letras.");
+        return;
+    }
+
+    const roomRef = doc(db, roomsPath, roomId);
+    
+    try {
+        const docSnap = await getDoc(roomRef);
+        if (!docSnap.exists()) {
+            showMessage("No se encontró ninguna sala con ese código.");
+            return;
+        }
+        
+        const roomData = docSnap.data();
+        if (roomData.players.length >= 34) { // Límite de jugadores
+             showMessage("La sala está llena.");
+             return;
+        }
+
+        if (roomData.gameState.status !== 'lobby') {
+            showMessage("La partida ya ha comenzado.");
+            return;
+        }
+
+        // Añadir jugador
+        await updateDoc(roomRef, {
+            players: arrayUnion({ userId: userId, name: userName })
+        });
+        
+        isHost = false;
+        listenToRoom(roomId);
+        showScreen(lobbyScreen);
+        
+    } catch (error) {
+        console.error("Error al unirse a la sala:", error);
+        showMessage("Error al unirse a la sala. Verifica el código.");
+    }
+}
+
+// Salir de la sala (Host o Invitado)
+async function leaveRoom() {
+    const { doc, updateDoc, deleteDoc, arrayRemove, runTransaction } = window.firebase;
+    
+    if (roomUnsubscribe) {
+        roomUnsubscribe(); // Deja de escuchar
+        roomUnsubscribe = null;
+    }
+    
+    if (currentRoomId) {
+        const roomRef = doc(db, roomsPath, currentRoomId);
+        if (isHost) {
+            // Si soy el host, borro la sala
+            await deleteDoc(roomRef).catch(e => console.error("Error al borrar sala:", e));
+        } else {
+            // Si soy invitado, me quito de la lista
+            await updateDoc(roomRef, {
+                players: arrayRemove({ userId: userId, name: userName })
+            }).catch(e => console.error("Error al salir de la sala:", e));
+        }
+    }
+    
+    currentRoomId = null;
+    isHost = false;
+    showScreen(startScreen);
+}
+
+// Función del Host para actualizar la config en Firestore
+async function updateLobbyConfig() {
+    if (!isHost || !currentRoomId) return;
+    
+    const { doc, updateDoc } = window.firebase;
+    const roomRef = doc(db, roomsPath, currentRoomId);
+
+    // Leer valores de los controles del lobby
+    const config = {
+        impostorCount: parseInt(lobbyImpostorCountDisplay.textContent),
+        category: lobbyCategorySelector.value,
+        specialRounds: lobbySpecialRoundsCheck.checked,
+        impostorKnows: lobbyImpostorKnowsCheck.checked
+    };
+    
+    try {
+        await updateDoc(roomRef, { config: config });
+    } catch (e) {
+        console.error("Error al actualizar config:", e);
+    }
+}
+
+// Función del Host para iniciar la partida
+async function handleOnlineStartGame() {
+    if (!isHost || !currentRoomId) return;
+    
+    const { doc, getDoc, updateDoc } = window.firebase;
+    const roomRef = doc(db, roomsPath, currentRoomId);
+    
+    try {
+        const docSnap = await getDoc(roomRef);
+        if (!docSnap.exists()) return;
+        
+        const roomData = docSnap.data();
+        
+        // Cargar variables locales con la config de la sala
+        playerNames = roomData.players.map(p => p.name);
+        playerCount = playerNames.length;
+        impostorCount = roomData.config.impostorCount;
+        selectedCategory = roomData.config.category;
+        enableSpecialRounds = roomData.config.specialRounds;
+        impostorKnows = roomData.config.impostorKnows;
+
+        if (playerCount < 3) {
+            showMessage("Necesitas al menos 3 jugadores para empezar.");
+            return;
+        }
+        if (impostorCount >= playerCount) {
+            showMessage("Debe haber menos impostores que jugadores.");
+            return;
+        }
+
+        // Ejecutar la lógica local de setup
+        setupGame();
+        
+        // Crear el nuevo estado de juego para guardar en Firestore
+        const newGameState = {
+            status: 'playing',
+            wordForPlayers: wordForPlayers,
+            wordForImpostor: wordForImpostor,
+            impostorIndices: impostorIndices,
+            currentRoundType: currentRoundType,
+            // Nota: playerNames y playerCount se leen de la lista de players
+        };
+        
+        // Actualizar el documento
+        await updateDoc(roomRef, { gameState: newGameState });
+        
+        // El onSnapshot se encargará de mover al host y a los clientes a la pantalla de juego
+        
+    } catch (error) {
+        console.error("Error al iniciar la partida online:", error);
+    }
+}
+
+// Función del Host para volver al lobby
+async function handleBackToLobby() {
+    if (!isHost || !currentRoomId) return;
+
+    const { doc, updateDoc } = window.firebase;
+    const roomRef = doc(db, roomsPath, currentRoomId);
+    
+    try {
+        await updateDoc(roomRef, {
+            'gameState.status': 'lobby'
+        });
+        // El onSnapshot moverá a todos al lobby
+    } catch (e) {
+        console.error("Error al volver al lobby:", e);
+    }
+}
+
+
+// --- LÓGICA DE JUEGO (LOCAL) ---
+// Esta lógica ahora es usada por el juego local,
+// Y también por el HOST del juego online para preparar la ronda.
+
 function setupGame() {
     currentPlayerIndex = 0;
     impostorIndices = [];
     wordForPlayers = "";
     wordForImpostor = "";
-    currentRoundType = "normal"; // Resetea el tipo de ronda
-    stopAlarm(); // Asegura que la alarma esté apagada al inicio
+    currentRoundType = "normal";
+    stopAlarm();
     
     // 1. Elegir la lista de palabras
     let wordList;
@@ -728,180 +1248,227 @@ function setupGame() {
     }
 
     // 2. Verificar Rondas Especiales
-    // (Probabilidad del 25% si está habilitado)
     if (enableSpecialRounds && Math.random() < 0.25) {
         const specialType = Math.floor(Math.random() * 4);
         
         switch (specialType) {
-            case 0: // Todos impostores
+            case 0:
                 currentRoundType = "Todos Impostores";
                 impostorIndices = Array.from({length: playerCount}, (_, i) => i);
                 wordForImpostor = "IMPOSTOR";
-                wordForPlayers = "IMPOSTOR"; // Técnicamente no se usa
+                wordForPlayers = "IMPOSTOR";
                 break;
-            case 1: // Nadie es impostor
+            case 1:
                 currentRoundType = "Nadie es Impostor";
                 impostorIndices = [];
                 wordForPlayers = wordList[Math.floor(Math.random() * wordList.length)];
                 break;
-            case 2: // Todos menos uno impostor
+            case 2:
                 currentRoundType = "Todos menos uno Impostor";
                 const luckyPlayer = Math.floor(Math.random() * playerCount);
                 impostorIndices = Array.from({length: playerCount}, (_, i) => i).filter(i => i !== luckyPlayer);
                 wordForPlayers = wordList[Math.floor(Math.random() * wordList.length)];
                 wordForImpostor = "IMPOSTOR";
                 break;
-            case 4: // Todos con palabra distinta
-            default: // Caso de respaldo
+            case 3:
+            default:
                 currentRoundType = "Todos con palabra distinta";
-                impostorIndices = []; // No hay impostores, solo caos
-                // La palabra se asignará en la pantalla de "mostrar palabra"
+                impostorIndices = [];
                 break;
         }
     } else {
-        // 3. Lógica de Ronda Normal (incluye "Impostor Sabe")
+        // 3. Lógica de Ronda Normal
         currentRoundType = "normal";
         
-        // 3a. Elegir palabra para jugadores
         const playerWordIndex = Math.floor(Math.random() * wordList.length);
         wordForPlayers = wordList[playerWordIndex];
 
-        // 3b. Elegir palabra para impostor (si no sabe)
         if (!impostorKnows) {
             let impostorWordIndex = Math.floor(Math.random() * wordList.length);
-            // Asegurarse de que sea una palabra DIFERENTE
             while (impostorWordIndex === playerWordIndex) {
                 impostorWordIndex = Math.floor(Math.random() * wordList.length);
             }
             wordForImpostor = wordList[impostorWordIndex];
         } else {
-            wordForImpostor = "IMPOSTOR"; // Si el impostor SÍ sabe
+            wordForImpostor = "IMPOSTOR";
         }
 
-        // 3c. Asignar los impostores
         const availablePlayerIndices = Array.from({length: playerCount}, (_, i) => i);
-        while (impostorIndices.length < impostorCount) {
+        let count = impostorCount; // Usar la variable global
+        while (count > 0 && availablePlayerIndices.length > 0) {
             const impostorIndex = availablePlayerIndices.splice(Math.floor(Math.random() * availablePlayerIndices.length), 1)[0];
             impostorIndices.push(impostorIndex);
+            count--;
         }
     }
 }
 
+// --- FUNCIONES DE UI (LOCAL) ---
+function renderPlayerNameInputs() {
+    playerNamesContainer.innerHTML = '';
+    // Asegura que playerNames tenga el tamaño correcto
+    while (playerNames.length < playerCount) {
+        playerNames.push(`Jugador ${playerNames.length + 1}`);
+    }
+    playerNames = playerNames.slice(0, playerCount);
+
+    for (let i = 0; i < playerCount; i++) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.classList.add('input-field'); // Reusar estilo
+        input.placeholder = `Jugador ${i + 1}`;
+        input.value = playerNames[i];
+        input.dataset.index = i;
+        input.addEventListener('input', (e) => {
+            playerNames[i] = e.target.value.trim() || `Jugador ${i + 1}`;
+        });
+        playerNamesContainer.appendChild(input);
+    }
+    playerCountEl.textContent = playerCount;
+    updateImpostorLimits();
+}
+
+function updateImpostorLimits() {
+    if (impostorCount >= playerCount) {
+        impostorCount = playerCount - 1;
+    }
+    if (playerCount > 1 && impostorCount < 1) {
+        impostorCount = 1;
+    }
+    impostorCountEl.textContent = impostorCount;
+}
 
 function updateWordScreenUI() {
-// Muestra SOLO el nombre del jugador actual
-playerNameDisplayEl.textContent = playerNames[currentPlayerIndex];
-// Restablece la pantalla para mostrar la palabra
-wordDisplayEl.textContent = "";
-wordDisplayEl.classList.add('hidden');
-showWordBtn.classList.remove('hidden');
-// Lógica para el último jugador
-if (currentPlayerIndex === playerCount - 1) {
-nextPlayerBtn.textContent = "Finalizar Ronda";
-} else {
-nextPlayerBtn.textContent = "Siguiente Jugador";
-}
-}
-// --- EVENT LISTENERS ---
+    playerNameDisplayEl.textContent = playerNames[currentPlayerIndex];
+    wordDisplayEl.textContent = "";
+    wordDisplayEl.classList.add('hidden');
+    showWordBtn.classList.remove('hidden');
 
-// Pantalla de inicio
+    if (currentPlayerIndex === playerCount - 1) {
+        nextPlayerBtn.textContent = "Finalizar Ronda";
+    } else {
+        nextPlayerBtn.textContent = "Siguiente Jugador";
+    }
+}
+
+// --- EVENT LISTENERS (Menús Iniciales) ---
 startGameBtn.addEventListener('click', () => {
-showScreen(configScreen);
-renderPlayerNameInputs();
+    showScreen(configScreen);
+    renderPlayerNameInputs();
 });
-// Botón para mostrar/ocultar los campos de nombres
-toggleNamesBtn.addEventListener('click', () => {
-playerNamesContainer.classList.toggle('hidden');
-const isHidden = playerNamesContainer.classList.contains('hidden');
-toggleNamesBtn.textContent = isHidden ? "Cambiar nombres de jugadores" : "Ocultar nombres";
+onlineGameBtn.addEventListener('click', () => {
+    if (!userId) {
+        showMessage("Conectando al servidor... Intenta de nuevo en un segundo.");
+        return;
+    }
+    showScreen(onlineMenuScreen);
 });
+backToStartBtn.addEventListener('click', () => showScreen(startScreen));
+backToStartBtnLocal.addEventListener('click', () => showScreen(startScreen));
 
-// Controles de Jugadores
+
+// --- EVENT LISTENERS (Online) ---
+createRoomBtn.addEventListener('click', handleCreateRoom);
+joinRoomMenuBtn.addEventListener('click', () => showScreen(joinRoomScreen));
+backToOnlineMenuBtn.addEventListener('click', () => showScreen(onlineMenuScreen));
+submitJoinBtn.addEventListener('click', handleJoinRoom);
+lobbyLeaveBtn.addEventListener('click', leaveRoom);
+lobbyStartGameBtn.addEventListener('click', handleOnlineStartGame);
+
+// Listeners para controles del host en lobby
+lobbyImpostorsMinus.addEventListener('click', () => {
+    let count = parseInt(lobbyImpostorCountDisplay.textContent);
+    if (count > 1) {
+        lobbyImpostorCountDisplay.textContent = count - 1;
+        updateLobbyConfig();
+    }
+});
+lobbyImpostorsPlus.addEventListener('click', () => {
+    let count = parseInt(lobbyImpostorCountDisplay.textContent);
+    // Límite (ej. 10)
+    if (count < 10) { 
+        lobbyImpostorCountDisplay.textContent = count + 1;
+        updateLobbyConfig();
+    }
+});
+lobbyCategorySelector.addEventListener('change', updateLobbyConfig);
+lobbySpecialRoundsCheck.addEventListener('change', updateLobbyConfig);
+lobbyImpostorKnowsCheck.addEventListener('change', updateLobbyConfig);
+
+
+// --- EVENT LISTENERS (Config Local) ---
+toggleNamesBtn.addEventListener('click', () => {
+    playerNamesContainer.classList.toggle('hidden');
+    const isHidden = playerNamesContainer.classList.contains('hidden');
+    toggleNamesBtn.textContent = isHidden ? "Cambiar nombres de jugadores" : "Ocultar nombres";
+});
 playersMinusBtn.addEventListener('click', () => {
-if (playerCount > 3) {
-playerCount--;
-renderPlayerNameInputs();
-} else {
-showMessage("La cantidad mínima de jugadores es 3.");
-}
+    if (playerCount > 3) {
+        playerCount--;
+        renderPlayerNameInputs();
+    } else {
+        showMessage("La cantidad mínima de jugadores es 3.");
+    }
 });
 playersPlusBtn.addEventListener('click', () => {
-if (playerCount < 34) { // Límite más alto para más flexibilidad
-playerCount++;
-renderPlayerNameInputs();
-} else {
-showMessage("Límite de 34 jugadores alcanzado.");
-}
+    if (playerCount < 34) {
+        playerCount++;
+        renderPlayerNameInputs();
+    } else {
+        showMessage("Límite de 34 jugadores alcanzado.");
+    }
 });
-// Controles de Impostores
 impostorsMinusBtn.addEventListener('click', () => {
-if (impostorCount > 1) {
-impostorCount--;
-impostorCountEl.textContent = impostorCount;
-} else {
-showMessage("La cantidad mínima de impostores es 1.");
-}
-updateImpostorLimits();
+    if (impostorCount > 1) {
+        impostorCount--;
+        impostorCountEl.textContent = impostorCount;
+    } else {
+        showMessage("La cantidad mínima de impostores es 1.");
+    }
+    updateImpostorLimits();
 });
 impostorsPlusBtn.addEventListener('click', () => {
-if (impostorCount < playerCount - 1) {
-impostorCount++;
-impostorCountEl.textContent = impostorCount;
-} else {
-showMessage(`No puede haber ${playerCount} o más impostores si solo hay ${playerCount} jugadores.`);
-}
-updateImpostorLimits();
-});
-// Selector de Categoría
-categorySelector.addEventListener('change', (e) => {
-selectedCategory = e.target.value;
+    if (impostorCount < playerCount - 1) {
+        impostorCount++;
+        impostorCountEl.textContent = impostorCount;
+    } else {
+        showMessage(`No puede haber ${playerCount} o más impostores si solo hay ${playerCount} jugadores.`);
+    }
+    updateImpostorLimits();
 });
 
-// NUEVO: Listeners para los checkboxes
-specialRoundsCheck.addEventListener('change', (e) => {
-    enableSpecialRounds = e.target.checked;
-});
-
-impostorKnowsCheck.addEventListener('change', (e) => {
-    impostorKnows = e.target.checked;
-});
-
-
-// Botón Iniciar Partida (Configuración)
+// Botón Iniciar Partida (Local)
 startRoundBtn.addEventListener('click', () => {
-// Validaciones
-if (impostorCount > 0 && (currentRoundType === "normal" || currentRoundType === "todosMenosUno")) {
+    // Leer config local
+    impostorCount = parseInt(impostorCountEl.textContent);
+    selectedCategory = categorySelector.value;
+    enableSpecialRounds = specialRoundsCheck.checked;
+    impostorKnows = impostorKnowsCheck.checked;
+    
+    // Validaciones locales
     if (playerCount <= impostorCount) {
         showMessage("La cantidad de jugadores debe ser mayor que la de impostores.");
         return;
     }
-}
-if (playerCount < 3) {
-    showMessage("Debe haber al menos 3 jugadores.");
-    return;
-}
+    document.querySelectorAll('#player-names-container .input-field').forEach((input, index) => {
+        playerNames[index] = input.value.trim() || `Jugador ${index + 1}`;
+    });
 
-// Recoger los nombres por última vez
-document.querySelectorAll('.player-name-input').forEach((input, index) => {
-playerNames[index] = input.value.trim() || `Jugador ${index + 1}`;
+    setupGame(); // Prepara el juego local
+    updateWordScreenUI();
+    showScreen(wordScreen);
 });
 
-setupGame();
-updateWordScreenUI();
-showScreen(wordScreen);
-});
 
-// Botón Mostrar Palabra (LÓGICA MUY MODIFICADA)
+// --- EVENT LISTENERS (Juego) ---
 showWordBtn.addEventListener('click', () => {
     const isImpostor = impostorIndices.includes(currentPlayerIndex);
     
-    // Resetea estilos y alarma
     wordDisplayEl.classList.remove('impostor-text');
     stopAlarm();
 
-    // Caso 1: Ronda "Todos con palabra distinta"
     if (currentRoundType === "Todos con palabra distinta") {
-        let wordList; // Obtener la lista de palabras de nuevo
+        let wordList;
         if (selectedCategory === 'random') {
             const allLists = Object.values(allWordLists);
             wordList = allLists[Math.floor(Math.random() * allLists.length)];
@@ -910,14 +1477,15 @@ showWordBtn.addEventListener('click', () => {
         }
         wordDisplayEl.textContent = wordList[Math.floor(Math.random() * wordList.length)];
     
-    // Caso 2: El jugador es Impostor
     } else if (isImpostor) {
-        wordDisplayEl.textContent = wordForImpostor; // "IMPOSTOR" o palabra distinta
+        wordDisplayEl.textContent = wordForImpostor;
         wordDisplayEl.classList.add('impostor-text');
         
-        // ¡Activar alarma si las rondas especiales están habilitadas!
+        if (enableSpecialRounds) {
+            document.body.classList.add('impostor-alarm');
+            alarmSound.play().catch(e => console.warn("La reproducción de audio fue bloqueada."));
+        }
         
-    // Caso 3: El jugador NO es Impostor (y no es ronda de "todos distintos")
     } else {
         wordDisplayEl.textContent = wordForPlayers;
     }
@@ -926,36 +1494,43 @@ showWordBtn.addEventListener('click', () => {
     showWordBtn.classList.add('hidden');
 });
 
-// Botón Siguiente Jugador / Finalizar Ronda
+// Botón Siguiente Jugador
 nextPlayerBtn.addEventListener('click', () => {
-    stopAlarm(); // Detener alarma al pasar al siguiente jugador
+    stopAlarm();
     
     if (currentPlayerIndex < playerCount - 1) {
         currentPlayerIndex++;
         updateWordScreenUI();
     } else {
-        // Último jugador vio su palabra
+        // Modificar botones de pantalla final según el modo (local/online)
+        if (currentRoomId) {
+            // Modo Online
+            playAgainBtn.textContent = "Jugar de Nuevo";
+            changeSettingsBtn.textContent = "Volver al Lobby";
+            playAgainBtn.style.display = isHost ? 'flex' : 'none'; // Solo host puede reiniciar
+        } else {
+            // Modo Local
+            playAgainBtn.textContent = "Jugar de Nuevo";
+            changeSettingsBtn.textContent = "Cambiar Ajustes";
+            playAgainBtn.style.display = 'flex';
+        }
+        
         endMessageInitialEl.classList.remove('hidden');
         impostorRevealBtn.classList.remove('hidden');
         revealArea.classList.add('hidden');
-        specialRoundInfoEl.classList.add('hidden'); // Oculta info de ronda anterior
+        specialRoundInfoEl.classList.add('hidden');
         showScreen(endScreen);
     }
 });
 
-// Botón Revelar Impostores
+// --- EVENT LISTENERS (Pantalla Final) ---
 impostorRevealBtn.addEventListener('click', () => {
-    stopAlarm(); // Detener alarma por si acaso
-
-    // Oculta el botón de revelación
+    stopAlarm();
     impostorRevealBtn.classList.add('hidden');
     endMessageInitialEl.classList.add('hidden');
-    
-    // Muestra el área de revelación
     revealArea.classList.remove('hidden');
     impostorListEl.innerHTML = '';
 
-    // NUEVO: Mostrar info de ronda especial
     if (currentRoundType !== "normal") {
         let specialText = `¡Ronda Especial: ${currentRoundType}!`;
         if (currentRoundType === "Nadie es Impostor") {
@@ -969,42 +1544,66 @@ impostorRevealBtn.addEventListener('click', () => {
         specialRoundInfoEl.classList.add('hidden');
     }
 
-    // Genera la lista de nombres de impostores
     if (impostorIndices.length > 0) {
         endMessageFinal.textContent = "Los impostores eran:";
         impostorIndices.forEach(index => {
-            const li = document.createElement('li');
-            li.textContent = playerNames[index];
-            impostorListEl.appendChild(li);
+            if (playerNames[index]) {
+                const li = document.createElement('li');
+                li.textContent = playerNames[index];
+                impostorListEl.appendChild(li);
+            }
         });
     } else {
         endMessageFinal.textContent = "¡No había impostores esta ronda!";
     }
 });
 
-// Botón Jugar de Nuevo
+// Botón Jugar de Nuevo (Ahora maneja local y online)
 playAgainBtn.addEventListener('click', () => {
     stopAlarm();
-    setupGame(); // Nueva ronda con la misma configuración
-    updateWordScreenUI();
-    showScreen(wordScreen);
+    if (currentRoomId && isHost) {
+        // Online: Host inicia otra ronda
+        handleOnlineStartGame();
+    } else if (!currentRoomId) {
+        // Local: Inicia otra ronda
+        setupGame();
+        updateWordScreenUI();
+        showScreen(wordScreen);
+    }
 });
 
-// Botón Cambiar Ajustes
+// Botón Cambiar Ajustes (Ahora maneja local y online)
 changeSettingsBtn.addEventListener('click', () => {
     stopAlarm();
-    renderPlayerNameInputs(); // Vuelve a cargar los inputs de nombre
-    showScreen(configScreen);
+    if (currentRoomId && isHost) {
+        // Online: Host vuelve al lobby
+        handleBackToLobby();
+    } else if (currentRoomId && !isHost) {
+        // Online: Invitado sale de la sala
+        leaveRoom();
+    } else if (!currentRoomId) {
+        // Local: Vuelve a config local
+        renderPlayerNameInputs();
+        showScreen(configScreen);
+    }
 });
 
+
 // --- INICIALIZACIÓN ---
-document.addEventListener('DOMContentLoaded', () => {
-    // Cargar estado inicial de los checkboxes
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        await initFirebase(); // Esperar a que Firebase esté listo
+    } catch (e) {
+        console.error("Fallo la inicialización de Firebase", e);
+        showMessage("No se pudo conectar al modo online.");
+    }
+    
+    // Cargar estado inicial de checkboxes locales
     enableSpecialRounds = specialRoundsCheck.checked;
     impostorKnows = impostorKnowsCheck.checked;
 
     showScreen(startScreen);
-    renderPlayerNameInputs(); // Inicializa los inputs de nombre
+    renderPlayerNameInputs(); // Inicializa los inputs de nombre local
 });
 
 </script>
