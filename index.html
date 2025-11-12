@@ -159,7 +159,8 @@ font-family: var(--font-secondary);
 font-size: 1.2rem;
 font-weight: 700;
 color: var(--color-text-dark);
-/* width: 150px; / / Ajustado para checkboxes */
+width: 150px;
+/* width: 150px; */ /* Ajustado para checkboxes */
 }
 
 .option-value {
@@ -353,6 +354,7 @@ margin-top: 10px;
 <div class="count-controls">
 <button class="arrow-btn" id="players-minus" aria-label="Disminuir jugadores"><i class="fas fa-arrow-left"></i></button>
 <div>
+<div class="option-label">Cantidad de jugadores</div>
 <div class="option-label">Jugadores</div>
 <div class="option-value" id="player-count-display">3</div>
 </div>
@@ -370,6 +372,7 @@ margin-top: 10px;
 <div class="count-controls">
 <button class="arrow-btn" id="impostors-minus" aria-label="Disminuir impostores"><i class="fas fa-arrow-left"></i></button>
 <div>
+<div class="option-label">Cantidad de impostores</div>
 <div class="option-label">Impostores</div>
 <div class="option-value" id="impostor-count-display">1</div>
 </div>
@@ -676,7 +679,7 @@ function renderPlayerNameInputs() {
 playerNamesContainer.innerHTML = '';
 // Asegura que playerNames tenga el tamaño correcto
 while (playerNames.length < playerCount) {
-playerNames.push(Jugador ${playerNames.length + 1});
+playerNames.push(`Jugador ${playerNames.length + 1}`);
 }
 playerNames = playerNames.slice(0, playerCount);
 
@@ -684,12 +687,12 @@ for (let i = 0; i < playerCount; i++) {
 const input = document.createElement('input');
 input.type = 'text';
 input.classList.add('player-name-input');
-input.placeholder = Jugador ${i + 1};
+input.placeholder = `Jugador ${i + 1}`;
 input.value = playerNames[i];
 input.dataset.index = i;
 input.addEventListener('input', (e) => {
 // Guarda el nombre en el array al escribir
-playerNames[i] = e.target.value.trim() || Jugador ${i + 1};
+playerNames[i] = e.target.value.trim() || `Jugador ${i + 1}`;
 });
 playerNamesContainer.appendChild(input);
 }
@@ -708,9 +711,40 @@ impostorCount = 1;
 }
 impostorCountEl.textContent = impostorCount;
 }
+// --- LÓGICA DE ASIGNACIÓN DEL JUEGO ---
 
 // --- LÓGICA DE ASIGNACIÓN DEL JUEGO (MUY MODIFICADA) ---
 function setupGame() {
+currentPlayerIndex = 0;
+impostorIndices = [];
+
+// 1. Elegir la lista de palabras
+let wordList;
+// Dentro de la función setupGame():
+
+if (selectedCategory === 'players') {
+wordList = playersList;
+} else if (selectedCategory === 'clubs') {
+wordList = clubsList;
+} else if (selectedCategory === 'clashroyale') { // <--- LÓGICA EXISTENTE
+wordList = clashRoyaleList;
+} else if (selectedCategory === 'f1Pilots') { // <--- LÓGICA EXISTENTE
+wordList = f1PilotsList;
+} else if (selectedCategory === 'alumnos3ro') { // <--- NUEVA LÓGICA
+wordList = alumnos3roList;
+} else if (selectedCategory === 'genteColegio') { // <--- NUEVA LÓGICA
+wordList = genteColegioList;
+} else if (selectedCategory === 'profes') { // <--- NUEVA LÓGICA
+wordList = profesList;
+} else if (selectedCategory === 'cosasCotidianas') { // <--- NUEVA LÓGICA
+wordList = cosasCotidianasList;
+} else { // 'random'
+// El 'random' ahora elige entre TODAS las listas disponibles
+const lists = [
+playersList, clubsList, clashRoyaleList, f1PilotsList,
+alumnos3roList, genteColegioList, profesList, cosasCotidianasList
+];
+wordList = lists[Math.floor(Math.random() * lists.length)];
     currentPlayerIndex = 0;
     impostorIndices = [];
     wordForPlayers = "";
@@ -787,8 +821,20 @@ function setupGame() {
     }
 }
 
+// 2. Elegir la palabra para los jugadores
+const randomIndex = Math.floor(Math.random() * wordList.length);
+wordForPlayers = wordList[randomIndex];
+
+// 3. Asignar los impostores
+const availablePlayerIndices = Array.from({length: playerCount}, (_, i) => i);
+while (impostorIndices.length < impostorCount) {
+const impostorIndex = availablePlayerIndices.splice(Math.floor(Math.random() * availablePlayerIndices.length), 1)[0];
+impostorIndices.push(impostorIndex);
+}
+}
 
 function updateWordScreenUI() {
+// Muestra SOLO el nombre del jugador actual (cambio solicitado)
 // Muestra SOLO el nombre del jugador actual
 playerNameDisplayEl.textContent = playerNames[currentPlayerIndex];
 // Restablece la pantalla para mostrar la palabra
@@ -848,7 +894,7 @@ if (impostorCount < playerCount - 1) {
 impostorCount++;
 impostorCountEl.textContent = impostorCount;
 } else {
-showMessage(No puede haber ${playerCount} o más impostores si solo hay ${playerCount} jugadores.);
+showMessage(`No puede haber ${playerCount} o más impostores si solo hay ${playerCount} jugadores.`);
 }
 updateImpostorLimits();
 });
@@ -869,6 +915,9 @@ impostorKnowsCheck.addEventListener('change', (e) => {
 
 // Botón Iniciar Partida (Configuración)
 startRoundBtn.addEventListener('click', () => {
+if (playerCount <= impostorCount) {
+showMessage("La cantidad de jugadores debe ser mayor que la de impostores.");
+return;
 // Validaciones
 if (impostorCount > 0 && (currentRoundType === "normal" || currentRoundType === "todosMenosUno")) {
     if (playerCount <= impostorCount) {
@@ -883,16 +932,29 @@ if (playerCount < 3) {
 
 // Recoger los nombres por última vez
 document.querySelectorAll('.player-name-input').forEach((input, index) => {
-playerNames[index] = input.value.trim() || Jugador ${index + 1};
+playerNames[index] = input.value.trim() || `Jugador ${index + 1}`;
 });
 
 setupGame();
 updateWordScreenUI();
 showScreen(wordScreen);
 });
+// Botón Mostrar Palabra
 
 // Botón Mostrar Palabra (LÓGICA MUY MODIFICADA)
 showWordBtn.addEventListener('click', () => {
+const isImpostor = impostorIndices.includes(currentPlayerIndex);
+if (isImpostor) {
+wordDisplayEl.textContent = "IMPOSTOR";
+wordDisplayEl.classList.add('impostor-text');
+// Se eliminó playSound('impostor');
+} else {
+wordDisplayEl.textContent = wordForPlayers;
+wordDisplayEl.classList.remove('impostor-text');
+// Se eliminó playSound('success');
+}
+wordDisplayEl.classList.remove('hidden');
+showWordBtn.classList.add('hidden');
     const isImpostor = impostorIndices.includes(currentPlayerIndex);
     
     // Resetea estilos y alarma
@@ -928,6 +990,16 @@ showWordBtn.addEventListener('click', () => {
 
 // Botón Siguiente Jugador / Finalizar Ronda
 nextPlayerBtn.addEventListener('click', () => {
+if (currentPlayerIndex < playerCount - 1) {
+currentPlayerIndex++;
+updateWordScreenUI();
+} else {
+// Último jugador vio su palabra
+endMessageInitialEl.classList.remove('hidden');
+impostorRevealBtn.classList.remove('hidden');
+revealArea.classList.add('hidden');
+showScreen(endScreen);
+}
     stopAlarm(); // Detener alarma al pasar al siguiente jugador
     
     if (currentPlayerIndex < playerCount - 1) {
@@ -945,6 +1017,19 @@ nextPlayerBtn.addEventListener('click', () => {
 
 // Botón Revelar Impostores
 impostorRevealBtn.addEventListener('click', () => {
+// Se eliminó playSound('impostor');
+// Oculta el botón de revelación
+impostorRevealBtn.classList.add('hidden');
+endMessageInitialEl.classList.add('hidden');
+// Muestra el área de revelación
+revealArea.classList.remove('hidden');
+impostorListEl.innerHTML = '';
+// Genera la lista de nombres de impostores
+impostorIndices.forEach(index => {
+const li = document.createElement('li');
+li.textContent = playerNames[index];
+impostorListEl.appendChild(li);
+});
     stopAlarm(); // Detener alarma por si acaso
 
     // Oculta el botón de revelación
@@ -957,7 +1042,7 @@ impostorRevealBtn.addEventListener('click', () => {
 
     // NUEVO: Mostrar info de ronda especial
     if (currentRoundType !== "normal") {
-        let specialText = ¡Ronda Especial: ${currentRoundType}!;
+        let specialText = `¡Ronda Especial: ${currentRoundType}!`;
         if (currentRoundType === "Nadie es Impostor") {
             specialText += " Todos tenían la palabra.";
         } else if (currentRoundType === "Todos con palabra distinta") {
@@ -984,6 +1069,9 @@ impostorRevealBtn.addEventListener('click', () => {
 
 // Botón Jugar de Nuevo
 playAgainBtn.addEventListener('click', () => {
+setupGame(); // Nueva ronda con la misma configuración
+updateWordScreenUI();
+showScreen(wordScreen);
     stopAlarm();
     setupGame(); // Nueva ronda con la misma configuración
     updateWordScreenUI();
@@ -992,6 +1080,8 @@ playAgainBtn.addEventListener('click', () => {
 
 // Botón Cambiar Ajustes
 changeSettingsBtn.addEventListener('click', () => {
+renderPlayerNameInputs(); // Vuelve a cargar los inputs de nombre
+showScreen(configScreen);
     stopAlarm();
     renderPlayerNameInputs(); // Vuelve a cargar los inputs de nombre
     showScreen(configScreen);
@@ -999,6 +1089,8 @@ changeSettingsBtn.addEventListener('click', () => {
 
 // --- INICIALIZACIÓN ---
 document.addEventListener('DOMContentLoaded', () => {
+showScreen(startScreen);
+renderPlayerNameInputs(); // Inicializa los inputs de nombre
     // Cargar estado inicial de los checkboxes
     enableSpecialRounds = specialRoundsCheck.checked;
     impostorKnows = impostorKnowsCheck.checked;
@@ -1009,4 +1101,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </script>
 </body>
-</html>
