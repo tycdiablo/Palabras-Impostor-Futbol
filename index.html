@@ -878,6 +878,20 @@ function stopAlarm() {
     }
 }
 
+// --- FUNCIÓN DE UTILIDAD: RETRY CON EXPONENTIAL BACKOFF ---
+async function retryOperation(fn, maxRetries = 3) {
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            return await fn();
+        } catch (error) {
+            if (i === maxRetries - 1) throw error;
+            const delay = Math.pow(2, i) * 1000 + Math.random() * 500; // 1s, 2s, 4s (+ jitter)
+            console.log(`Retry attempt ${i + 1} failed. Retrying in ${delay.toFixed(0)}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+}
+
 // --- FUNCIONES DE FIREBASE ---
 async function initFirebase() {
     // Importar funciones de las variables globales
@@ -890,7 +904,6 @@ async function initFirebase() {
     // Fallback para pruebas locales si no hay config
     if (!firebaseConfig.apiKey) {
         console.warn("Firebase config no encontrada. Usando placeholders.");
-        // Aquí podrías poner una config de prueba, pero es mejor deshabilitar funciones online
     }
     
     // Inicializar Firebase
@@ -902,15 +915,21 @@ async function initFirebase() {
     // Definir la ruta de la base de datos
     roomsPath = `/artifacts/${appId}/public/data/impostor_rooms`;
 
-    // Autenticar al usuario
+    // Autenticar al usuario con reintentos
     try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-            await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-            await signInAnonymously(auth);
-        }
+        const signInTask = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+        };
+        
+        await retryOperation(signInTask, 3); // Intentará 3 veces
+        
     } catch (error) {
-        console.error("Error de autenticación:", error);
+        console.error("Error de autenticación final después de reintentos:", error);
+        // Mostrar este mensaje solo si falla después de todos los reintentos
         showMessage("Error al conectar con el servidor. El modo online no funcionará.");
     }
 
@@ -920,6 +939,7 @@ async function initFirebase() {
             console.log("Usuario autenticado:", userId);
         } else {
             console.warn("Usuario no autenticado.");
+            // Generar un ID temporal si la autenticación falla por completo (aunque esto es menos ideal para online)
             userId = 'guest-' + Math.random().toString(36).substring(2, 9);
         }
     });
@@ -1108,7 +1128,7 @@ async function handleJoinRoom() {
 
 // Salir de la sala (Host o Invitado)
 async function leaveRoom() {
-    const { doc, updateDoc, deleteDoc, arrayRemove, runTransaction } = window.firebase;
+    const { doc, updateDoc, deleteDoc, arrayRemove } = window.firebase;
     
     if (roomUnsubscribe) {
         roomUnsubscribe(); // Deja de escuchar
@@ -1592,8 +1612,9 @@ changeSettingsBtn.addEventListener('click', () => {
 // --- INICIALIZACIÓN ---
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        await initFirebase(); // Esperar a que Firebase esté listo
+        await initFirebase(); // Esperar a que Firebase esté listo (con reintentos)
     } catch (e) {
+        // Este catch solo se activará si la inicialización de Firebase falla completamente antes de la autenticación.
         console.error("Fallo la inicialización de Firebase", e);
         showMessage("No se pudo conectar al modo online.");
     }
