@@ -138,7 +138,7 @@ background-image: linear-gradient(to right, var(--color-primary) 0%, #0060c0 100
 border: 2px solid var(--color-text-light);
 }
 
-.btn:hover {
+.btn:hover:not(:disabled) {
 transform: translateY(-3px);
 box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 background-image: linear-gradient(to right, #0060c0 0%, var(--color-primary) 100%);
@@ -150,6 +150,7 @@ cursor: not-allowed;
 transform: none;
 box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 background-image: none;
+opacity: 0.6;
 }
 
 
@@ -439,8 +440,8 @@ color: var(--color-primary);
 <h1>Impostor Fútbol</h1>
 <p>Descubre el impostor entre tus amigos. ¡Que comience el partido!</p>
 <button id="start-game-btn" class="btn">Iniciar Partida Local</button>
-<!-- NUEVO: Botón Online -->
-<button id="online-game-btn" class="btn secondary">Sala Online</button>
+<!-- Botón Online, se deshabilitará hasta que Firebase esté listo -->
+<button id="online-game-btn" class="btn secondary" disabled>Conectando al Servidor...</button>
 </div>
 
 <!-- NUEVO: Pantalla de Menú Online -->
@@ -629,6 +630,7 @@ let db, auth, userId, userName, appId, roomsPath;
 let currentRoomId = null;
 let isHost = false;
 let roomUnsubscribe = null; // Para detener el listener de Firestore
+let isFirebaseReady = false; // NUEVO: Flag para confirmar que la autenticación terminó
 
 // --- BASE DE DATOS DE PALABRAS ---
 const playersList = [
@@ -927,22 +929,35 @@ async function initFirebase() {
         
         await retryOperation(signInTask, 3); // Intentará 3 veces
         
+        // Esperar el cambio de estado de autenticación
+        await new Promise(resolve => {
+            const unsubscribe = onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    userId = user.uid;
+                    console.log("Usuario autenticado:", userId);
+                } else {
+                    console.warn("Usuario no autenticado. Usando ID temporal.");
+                    // Generar un ID temporal
+                    userId = 'guest-' + Math.random().toString(36).substring(2, 9);
+                }
+                
+                isFirebaseReady = true; // El servidor está listo AHORA
+                onlineGameBtn.textContent = "Sala Online";
+                onlineGameBtn.disabled = false;
+                
+                unsubscribe(); // Detener el listener después del primer cambio
+                resolve();
+            });
+        });
+        
     } catch (error) {
         console.error("Error de autenticación final después de reintentos:", error);
-        // Mostrar este mensaje solo si falla después de todos los reintentos
+        // Si falla después de todos los reintentos
         showMessage("Error al conectar con el servidor. El modo online no funcionará.");
+        onlineGameBtn.textContent = "Error de Conexión";
+        onlineGameBtn.disabled = true;
+        isFirebaseReady = false;
     }
-
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            userId = user.uid;
-            console.log("Usuario autenticado:", userId);
-        } else {
-            console.warn("Usuario no autenticado.");
-            // Generar un ID temporal si la autenticación falla por completo (aunque esto es menos ideal para online)
-            userId = 'guest-' + Math.random().toString(36).substring(2, 9);
-        }
-    });
 }
 
 function generateRoomCode() {
@@ -1376,13 +1391,16 @@ startGameBtn.addEventListener('click', () => {
     showScreen(configScreen);
     renderPlayerNameInputs();
 });
+
+// NUEVO: Comprobación de estado de Firebase antes de ir al menú online
 onlineGameBtn.addEventListener('click', () => {
-    if (!userId) {
-        showMessage("Conectando al servidor... Intenta de nuevo en un segundo.");
+    if (!isFirebaseReady) {
+        showMessage("Aún estamos estableciendo la conexión con el servidor. Por favor, espera un momento y vuelve a intentarlo.");
         return;
     }
     showScreen(onlineMenuScreen);
 });
+
 backToStartBtn.addEventListener('click', () => showScreen(startScreen));
 backToStartBtnLocal.addEventListener('click', () => showScreen(startScreen));
 
@@ -1611,12 +1629,14 @@ changeSettingsBtn.addEventListener('click', () => {
 
 // --- INICIALIZACIÓN ---
 document.addEventListener('DOMContentLoaded', async () => {
+    // El botón online se deshabilita en el HTML/CSS y se habilita aquí
+    // El texto también se actualiza al finalizar la conexión
+    
     try {
         await initFirebase(); // Esperar a que Firebase esté listo (con reintentos)
     } catch (e) {
-        // Este catch solo se activará si la inicialización de Firebase falla completamente antes de la autenticación.
+        // initFirebase ya actualiza la UI si falla, este catch es solo un respaldo.
         console.error("Fallo la inicialización de Firebase", e);
-        showMessage("No se pudo conectar al modo online.");
     }
     
     // Cargar estado inicial de checkboxes locales
